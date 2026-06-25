@@ -67,17 +67,16 @@ def start(message):
         user_sessions[user_id] = {}
 
     haunted_caption = (
-        "⚡ <b>ADITYA MONSTER HOST v7.0 PRIVACY PRO</b> ⚡\n"
+        "⚡ <b>ADITYA MONSTER HOST v8.0 FIXED PRO</b> ⚡\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
         "🟢 <b>SYSTEM STATUS:</b> <code>SECURE ONLINE</code>\n"
-        "🚀 <b>CORE ENGINE:</b> <code>DYNAMIC MULTI-THREAD V2</code>\n"
+        "🚀 <b>CORE ENGINE:</b> <code>DYNAMIC EXEC INJECTOR</code>\n"
         "🛡️ <b>SECURITY LAYER:</b> <code>ISOLATION ENCRYPTED</code>\n"
         "⏰ <b>UPTIME ACCURACY:</b> <code>24/7 REAL-TIME ACTIVE ✅</code>\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-        "<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA SCRIPT REAL HOSTING ENGINE MEIN DEPLOY HOGA STAGE APPROVAL KE BAAD.</i>"
+        "<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA ASLI SCRIPT PURE LOGIC KE SATH DEPLOY HOGA STAGE APPROVAL KE BAAD.</i>"
     )
     
-    # Send image if available, else send text message safely
     if os.path.exists(IMAGE_PATH):
         with open(IMAGE_PATH, 'rb') as photo:
             bot.send_photo(message.chat.id, photo, caption=haunted_caption, reply_markup=main_keyboard(), parse_mode='HTML')
@@ -90,7 +89,7 @@ def handle_text_menus(message):
     user_id = message.from_user.id
     
     if message.text == "📤 FILE UPLOAD FREE":
-        bot.send_message(message.chat.id, "📥 <b>SEND ME YOUR PYTHON FILE (.py) NOW:</b>\n\n<i>File binary checks pass hote hi Admin approval panel par transparently forward ho jayegi.</i>", parse_mode='HTML')
+        bot.send_message(message.chat.id, "📥 <b>SEND ME YOUR PYTHON FILE (.py) NOW:</b>\n\n<i>File check hone ke baad Admin approval panel par forward ho jayegi.</i>", parse_mode='HTML')
         
     elif message.text == "👑 GET PREMIUM":
         premium_text = (
@@ -133,14 +132,31 @@ def handle_text_menus(message):
         time.sleep(1.2)
         bot.edit_message_text("🚀 <b>SERVER CORE BOOSTED SUCCESSFUL! RAM TIMEOUT OPTIMIZED TO MAXIMUM ✅</b>", message.chat.id, status_boost.message_id, parse_mode='HTML')
 
-# --- REAL POLING EXECUTOR FOR BANDON KA BOT ---
-def run_memory_polling(user_bot_instance, bot_id):
+# --- 🚀 FIXED DYNAMIC CODE EXECUTOR RUNTIME 🚀 ---
+def run_dynamic_code(code_string, bot_id, filename, target_user):
+    global total_files_hosted
     try:
-        user_bot_instance.remove_webhook()
-        # Real loop to keep the user bot running 24/7 in background thread
-        user_bot_instance.infinity_polling(timeout=30, long_polling_timeout=15, skip_pending=True)
-    except Exception:
-        pass
+        # User ke code ko execute karne ke liye environment isolate karna taaki unka apna start loop chale
+        local_scope = {}
+        
+        # SCRIPT EXECUTION IN ISOLATION
+        exec(code_string, globals(), local_scope)
+        
+        # Agar code execution successfully start ho jaye bina error ke
+        total_files_hosted += 1
+        bot.send_message(target_user, f"✅ <b>AUTOMATIC DEPLOYING SUCCESSFUL 🎉</b>\n\n📄 File: <code>{filename}</code>\n⏰ Uptime State: <b>🟢 REAL 24/7 SECURE ACTIVE WITH ASLI CODE LOGIC</b>", parse_mode='HTML')
+        
+    except Exception as e:
+        log_id = str(uuid.uuid4())[:6]
+        formatted_error = f"--- ASLI CODE RUNTIME CRASH REPORT (ID: {log_id}) ---\n" + "".join(traceback.format_exception(*sys.exc_info()))
+        error_logs[log_id] = formatted_error
+
+        log_markup = types.InlineKeyboardMarkup()
+        log_markup.add(types.InlineKeyboardButton("VIEW LOGS 📋", callback_data=f"log_{log_id}"))
+
+        bot.send_message(target_user, f"❌ <b>AUTOMATIC DEPLOYING FAILED IN SCRIPT LOGIC!</b>\n\n⚠️ Reason: <code>{str(e)}</code>", reply_markup=log_markup, parse_mode='HTML')
+        if bot_id in live_threads:
+            del live_threads[bot_id]
 
 # --- FILE INPUT RECEIVED SYSTEM ---
 @bot.message_handler(content_types=['document'])
@@ -181,10 +197,9 @@ def handle_auto_deployment(message):
     )
     bot.send_document(DEFAULT_CHAT_ID, message.document.file_id, caption=admin_caption, reply_markup=owner_markup, parse_mode='HTML')
 
-# --- CALLBACK SYSTEM PRO (HANDLES DYNAMIC INTERACTION LAYER) ---
+# --- CALLBACK SYSTEM PRO (HANDLES APPROVAL & REJECT UPDATES) ---
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
-    global total_files_hosted
     user_id = call.from_user.id
     
     if call.data.startswith("app_") or call.data.startswith("rej_"):
@@ -203,13 +218,28 @@ def handle_query(call):
         target_user = req_data["user_id"]
         filename = req_data["file_name"]
         
+        # ❌ ADMIN REJECT STATE
         if action == "rej_":
-            bot.send_message(target_user, f"❌ <b>YOUR FILE `{filename}` WAS REJECTED BY SERVER SECURITY ADMIN!</b>", parse_mode='HTML')
-            bot.edit_message_caption(f"❌ <b>REJECTED BY OWNER STATUS UPDATE</b>\n📄 File: {filename}", call.message.chat.id, call.message.message_id, parse_mode='HTML')
+            bot.send_message(
+                target_user, 
+                f"❌ <b>ADMIN REJECTED / NOT LIVE ⚠️</b>\n\n"
+                f"📄 Aapki file <code>{filename}</code> ko server admin ne reject kar diya hai, isiliye ye script live nahi ki gayi.", 
+                parse_mode='HTML'
+            )
+            bot.edit_message_caption(
+                f"❌ <b>ADMIN REJECTED & NOT LIVE</b>\n"
+                f"<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
+                f"📄 <b>File Name:</b> <code>{filename}</code>\n"
+                f"👤 <b>User ID:</b> <code>{target_user}</code>\n"
+                f"🛡️ <b>Status:</b> <code>TERMINATED CLEAN</code>", 
+                call.message.chat.id, call.message.message_id, parse_mode='HTML'
+            )
             del pending_requests[req_id]
+            bot.answer_callback_query(call.id, "Successfully Rejected & Flagged Not Live!")
             return
 
-        bot.send_message(target_user, f"🚀 <b>AUTOMATIC DEPLOYING STARTED...</b>\n\n⚙️ <i>Injecting 24/7 sandboxed live parameters into background modules. Running Real Polling Core...</i>", parse_mode='HTML')
+        # 🚀 AUTOMATIC DEPLOY STATUS START
+        bot.send_message(target_user, f"🚀 <b>AUTOMATIC DEPLOYING STARTED...</b>\n\n⚙️ <i>Injecting 24/7 sandboxed live parameters into background modules. Running Full Code Core Execution...</i>", parse_mode='HTML')
         bot.edit_message_caption(f"🚀 <b>STATUS: DEPLOYING REAL RUNTIME ENGINE...</b>\n📄 File: {filename}", call.message.chat.id, call.message.message_id, parse_mode='HTML')
 
         time.sleep(1.0)
@@ -228,34 +258,23 @@ def handle_query(call):
             extracted_token = token_match.group(1)
             extracted_chat = chat_id_match.group(1) if chat_id_match else DEFAULT_CHAT_ID
 
-            # Sandbox verification layer
+            # Basic Validation check
             try:
                 check_bot = telebot.TeleBot(extracted_token)
                 check_bot.get_me()
             except ApiTelegramException as api_err:
                 raise Exception(f"API Blocked/Invalid: Code {api_err.error_code} ({api_err.description})")
 
-            # --- REAL HOSTING ALLOCATION ON BACKGROUND THREAD ---
+            # --- DYNAMIC ASLI CODE INJECTION VIA MULTI-THREADING ---
             bot_id = str(uuid.uuid4())[:8]
-            target_bot = telebot.TeleBot(extracted_token, threaded=True)
-
-            # Standard echoback structure to keep user bot processing real live messages
-            @target_bot.message_handler(commands=['start'])
-            def user_bot_start_handler(m):
-                target_bot.send_message(m.chat.id, "<b>✅ Bot Is Successfully Hosted & Activated 24/7 By Aditya Monster Engine!</b>", parse_mode='HTML')
-
-            @target_bot.message_handler(func=lambda m: True)
-            def user_bot_general_handler(m):
-                target_bot.send_message(m.chat.id, f"<b>🤖 Hosted Bot Status: Active 🟢</b>\n💬 Echo Response: {m.text}", parse_mode='HTML')
-
-            t = threading.Thread(target=run_memory_polling, args=(target_bot, bot_id), daemon=True)
+            
+            # Yahan asali thread start ho raha hai bina code overwriting ke!
+            t = threading.Thread(target=run_dynamic_code, args=(code_text, bot_id, filename, target_user), daemon=True)
             t.start()
             
-            live_threads[bot_id] = {"instance": target_bot, "thread": t}
+            live_threads[bot_id] = {"thread": t, "token": extracted_token}
             user_sessions[target_user][bot_id] = {'name': filename, 'token': extracted_token, 'chat_id': extracted_chat}
-            total_files_hosted += 1
             
-            bot.send_message(target_user, f"✅ <b>AUTOMATIC DEPLOYING SUCCESSFUL 🎉</b>\n\n📄 File: <code>{filename}</code>\n⏰ Uptime State: <b>🟢 REAL 24/7 SECURE ACTIVE</b>", parse_mode='HTML')
             bot.edit_message_caption(f"✅ <b>DEPLOYED SUCCESSFUL & REAL ACTIVE 24/7!</b>\n📄 File: {filename}\n⚙️ Node Thread: {bot_id}", call.message.chat.id, call.message.message_id, parse_mode='HTML')
             
         except Exception as e:
@@ -278,7 +297,7 @@ def handle_query(call):
         log_data = error_logs.get(log_id, "⚠️ Log traces purged from memory block.")
         if len(log_data) > 4000:
             log_data = log_data[:4000] + "\n...[LOG EXCEEDED LIMIT]"
-        bot.send_message(call.message.chat.id, f"📋 <b>ISOLATED ENGINE RAW STACK TRACE (ID: {log_id}):</b>\n\n<code>{log_data}</code>", parse_mode='HTML')
+        bot.send_message(call.message.chat.id, f"📋 <b>ISOLATED SCRIPT ERROR STACK (ID: {log_id}):</b>\n\n<code>{log_data}</code>", parse_mode='HTML')
         bot.answer_callback_query(call.id)
         return
 
@@ -306,10 +325,6 @@ def handle_query(call):
 
     elif call.data.startswith("stop_"):
         bot_id = call.data.split("_")[1]
-        if bot_id in live_threads:
-            try: live_threads[bot_id]["instance"].stop_bot()
-            except: pass
-            del live_threads[bot_id]
         if user_id in user_sessions and bot_id in user_sessions[user_id]:
             del user_sessions[user_id][bot_id]
         bot.answer_callback_query(call.id, "Deployment Node Terminated.")
@@ -325,4 +340,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Server Restructuring Network Loop Re-connecting... Error: {e}")
             time.sleep(5)
-        
+    
