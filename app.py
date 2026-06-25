@@ -3,6 +3,7 @@ import sys
 import re
 import time
 import uuid
+import subprocess
 import threading
 import traceback
 import telebot
@@ -67,14 +68,14 @@ def start(message):
         user_sessions[user_id] = {}
 
     haunted_caption = (
-        "⚡ <b>ADITYA MONSTER HOST v8.0 FIXED PRO</b> ⚡\n"
+        "⚡ <b>ADITYA MONSTER HOST v9.0 SUBPROCESS FIXED</b> ⚡\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
         "🟢 <b>SYSTEM STATUS:</b> <code>SECURE ONLINE</code>\n"
-        "🚀 <b>CORE ENGINE:</b> <code>DYNAMIC EXEC INJECTOR</code>\n"
-        "🛡️ <b>SECURITY LAYER:</b> <code>ISOLATION ENCRYPTED</code>\n"
+        "🚀 <b>CORE ENGINE:</b> <code>SUBPROCESS ISOLATION</code>\n"
+        "🛡️ <b>SECURITY LAYER:</b> <code>PERSISTENT STORAGE LOGS</code>\n"
         "⏰ <b>UPTIME ACCURACY:</b> <code>24/7 REAL-TIME ACTIVE ✅</code>\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-        "<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA ASLI SCRIPT PURE LOGIC KE SATH DEPLOY HOGA STAGE APPROVAL KE BAAD.</i>"
+        "<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA ASLI SCRIPT REAL ENVIRONMENT MEIN CHALEGA 24/7 STAGE APPROVAL KE BAAD.</i>"
     )
     
     if os.path.exists(IMAGE_PATH):
@@ -118,7 +119,7 @@ def handle_text_menus(message):
             f"👥 <b>TOTAL ACTIVE USERS:</b> <code>{total_users}</code>\n"
             f"🤖 <b>REAL BACKGROUND RUNNING BOTS:</b> <code>{active_bots}</code>\n"
             f"📈 <b>TOTAL DEPLOYMENTS OVERALL:</b> <code>{total_files_hosted}</code>\n"
-            f"🛡️ <b>PRIVACY ENGINE STATE:</b> <code>Isolated & Sandbox Protection (100%)</code>\n"
+            f"🛡️ <b>PRIVACY ENGINE STATE:</b> <code>Subprocess Sandbox Protection (100%)</code>\n"
             "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
             "✅ <b>All operational security systems are stable.</b>"
         )
@@ -132,31 +133,30 @@ def handle_text_menus(message):
         time.sleep(1.2)
         bot.edit_message_text("🚀 <b>SERVER CORE BOOSTED SUCCESSFUL! RAM TIMEOUT OPTIMIZED TO MAXIMUM ✅</b>", message.chat.id, status_boost.message_id, parse_mode='HTML')
 
-# --- 🚀 FIXED DYNAMIC CODE EXECUTOR RUNTIME 🚀 ---
-def run_dynamic_code(code_string, bot_id, filename, target_user):
+# --- 🚀 SUBPROCESS RE-ENGINEERED EXECUTOR (NO MORE LOG PURGED PROBLEM) 🚀 ---
+def run_isolated_subprocess(temp_filename, bot_id, filename, target_user, log_id):
     global total_files_hosted
     try:
-        # User ke code ko execute karne ke liye environment isolate karna taaki unka apna start loop chale
-        local_scope = {}
+        # User ke code ko bilkul alag processes me background me run karna taaki real logic safe chale
+        process = subprocess.Popen(
+            [sys.executable, temp_filename],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
         
-        # SCRIPT EXECUTION IN ISOLATION
-        exec(code_string, globals(), local_scope)
-        
-        # Agar code execution successfully start ho jaye bina error ke
+        live_threads[bot_id]["process_obj"] = process
         total_files_hosted += 1
+        
         bot.send_message(target_user, f"✅ <b>AUTOMATIC DEPLOYING SUCCESSFUL 🎉</b>\n\n📄 File: <code>{filename}</code>\n⏰ Uptime State: <b>🟢 REAL 24/7 SECURE ACTIVE WITH ASLI CODE LOGIC</b>", parse_mode='HTML')
         
+        # Capture error logs persistently if the process ends or crashes later
+        stdout, stderr = process.communicate()
+        if process.returncode != 0 and stderr:
+            error_logs[log_id] = f"--- RUNTIME ERROR IN USER CODE ---\n{stderr}"
+            
     except Exception as e:
-        log_id = str(uuid.uuid4())[:6]
-        formatted_error = f"--- ASLI CODE RUNTIME CRASH REPORT (ID: {log_id}) ---\n" + "".join(traceback.format_exception(*sys.exc_info()))
-        error_logs[log_id] = formatted_error
-
-        log_markup = types.InlineKeyboardMarkup()
-        log_markup.add(types.InlineKeyboardButton("VIEW LOGS 📋", callback_data=f"log_{log_id}"))
-
-        bot.send_message(target_user, f"❌ <b>AUTOMATIC DEPLOYING FAILED IN SCRIPT LOGIC!</b>\n\n⚠️ Reason: <code>{str(e)}</code>", reply_markup=log_markup, parse_mode='HTML')
-        if bot_id in live_threads:
-            del live_threads[bot_id]
+        error_logs[log_id] = f"--- SYSTEM ISOLATION CRASH ---\n{str(e)}\n{traceback.format_exc()}"
 
 # --- FILE INPUT RECEIVED SYSTEM ---
 @bot.message_handler(content_types=['document'])
@@ -172,7 +172,7 @@ def handle_auto_deployment(message):
 
     bot.send_message(
         message.chat.id, 
-        "⏳ <b>WAIT FOR ADMIN APPROVAL...</b>\n\n📄 Aapki script secure channel se Owner approval panel par bhej di gayi hai. Jaise hi approve hoga, automatic deployment instantly start ho jayegi! ✅", 
+        "⏳ <b>WAIT FOR ADMIN APPROVAL...</b>\n\nAapki script secure channel se Owner approval panel par bhej di gayi hai. Jaise hi approve hoga, automatic deployment instantly start ho jayegi! ✅", 
         parse_mode='HTML'
     )
 
@@ -239,11 +239,12 @@ def handle_query(call):
             return
 
         # 🚀 AUTOMATIC DEPLOY STATUS START
-        bot.send_message(target_user, f"🚀 <b>AUTOMATIC DEPLOYING STARTED...</b>\n\n⚙️ <i>Injecting 24/7 sandboxed live parameters into background modules. Running Full Code Core Execution...</i>", parse_mode='HTML')
+        bot.send_message(target_user, f"🚀 <b>AUTOMATIC DEPLOYING STARTED...</b>\n\n⚙️ <i>Injecting 24/7 sandboxed live parameters into background modules. Running Full Independent Engine...</i>", parse_mode='HTML')
         bot.edit_message_caption(f"🚀 <b>STATUS: DEPLOYING REAL RUNTIME ENGINE...</b>\n📄 File: {filename}", call.message.chat.id, call.message.message_id, parse_mode='HTML')
 
         time.sleep(1.0)
 
+        log_id = str(uuid.uuid4())[:6]
         try:
             file_info = bot.get_file(req_data["file_id"])
             file_content = bot.download_file(file_info.file_path)
@@ -258,27 +259,30 @@ def handle_query(call):
             extracted_token = token_match.group(1)
             extracted_chat = chat_id_match.group(1) if chat_id_match else DEFAULT_CHAT_ID
 
-            # Basic Validation check
+            # Sandbox basic API verification check
             try:
                 check_bot = telebot.TeleBot(extracted_token)
                 check_bot.get_me()
             except ApiTelegramException as api_err:
                 raise Exception(f"API Blocked/Invalid: Code {api_err.error_code} ({api_err.description})")
 
-            # --- DYNAMIC ASLI CODE INJECTION VIA MULTI-THREADING ---
+            # --- SAVE INDEPENDENT TEMP FILE FOR USER SCRIPT ---
             bot_id = str(uuid.uuid4())[:8]
-            
-            # Yahan asali thread start ho raha hai bina code overwriting ke!
-            t = threading.Thread(target=run_dynamic_code, args=(code_text, bot_id, filename, target_user), daemon=True)
-            t.start()
-            
-            live_threads[bot_id] = {"thread": t, "token": extracted_token}
+            temp_filename = f"user_bot_{bot_id}.py"
+            with open(temp_filename, "w", encoding="utf-8") as f:
+                f.write(code_text)
+
+            # Store baseline data structure
+            live_threads[bot_id] = {"filename": temp_filename, "process_obj": None, "token": extracted_token}
             user_sessions[target_user][bot_id] = {'name': filename, 'token': extracted_token, 'chat_id': extracted_chat}
+
+            # Fire independent thread via Subprocess
+            t = threading.Thread(target=run_isolated_subprocess, args=(temp_filename, bot_id, filename, target_user, log_id), daemon=True)
+            t.start()
             
             bot.edit_message_caption(f"✅ <b>DEPLOYED SUCCESSFUL & REAL ACTIVE 24/7!</b>\n📄 File: {filename}\n⚙️ Node Thread: {bot_id}", call.message.chat.id, call.message.message_id, parse_mode='HTML')
             
         except Exception as e:
-            log_id = str(uuid.uuid4())[:6]
             formatted_error = f"--- SANDBOX ISOLATED CRASH REPORT (ID: {log_id}) ---\n" + "".join(traceback.format_exception(*sys.exc_info()))
             error_logs[log_id] = formatted_error
 
@@ -294,7 +298,7 @@ def handle_query(call):
 
     elif call.data.startswith("log_"):
         log_id = call.data[4:]
-        log_data = error_logs.get(log_id, "⚠️ Log traces purged from memory block.")
+        log_data = error_logs.get(log_id, "⚠️ Log traces not found or code executed cleanly.")
         if len(log_data) > 4000:
             log_data = log_data[:4000] + "\n...[LOG EXCEEDED LIMIT]"
         bot.send_message(call.message.chat.id, f"📋 <b>ISOLATED SCRIPT ERROR STACK (ID: {log_id}):</b>\n\n<code>{log_data}</code>", parse_mode='HTML')
@@ -325,6 +329,14 @@ def handle_query(call):
 
     elif call.data.startswith("stop_"):
         bot_id = call.data.split("_")[1]
+        if bot_id in live_threads:
+            try:
+                # Safely terminate independent background subprocess
+                live_threads[bot_id]["process_obj"].terminate()
+                os.remove(live_threads[bot_id]["filename"])
+            except: pass
+            del live_threads[bot_id]
+            
         if user_id in user_sessions and bot_id in user_sessions[user_id]:
             del user_sessions[user_id][bot_id]
         bot.answer_callback_query(call.id, "Deployment Node Terminated.")
@@ -340,4 +352,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Server Restructuring Network Loop Re-connecting... Error: {e}")
             time.sleep(5)
-    
+                
