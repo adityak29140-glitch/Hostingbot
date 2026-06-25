@@ -10,7 +10,12 @@ import telebot
 from telebot import types
 from telebot.apihelper import ApiTelegramException
 
-# Railway Environment Port Binding
+# --- RAILWAY PERSISTENT RE-ENGINEERING ---
+# Agar Railway me volume mounted hai toh data safe rahega
+STORAGE_DIR = "/data" if os.path.exists("/data") else os.getcwd()
+LOG_FILE_PATH = os.path.join(STORAGE_DIR, "crash_logs.txt")
+
+# Environment Port Binding
 os.environ["PORT"] = os.environ.get("PORT", "8080")
 
 # ⚡ TERA VERIFIED HIGH-SECURITY DETAILS ⚡
@@ -22,13 +27,33 @@ IMAGE_PATH = "6233.jpg"  # TERI SETUP IMAGE FILE
 # Main bot initialization
 bot = telebot.TeleBot(TOKEN, threaded=True)
 
-# Secure InMemory Database Trackers
+# Secure Runtime Database Trackers
 user_sessions = {}
 live_threads = {}
 premium_users = {} 
 pending_requests = {}  
-error_logs = {}        
 total_files_hosted = 0
+
+# --- HELPER FUNCTION FOR PERSISTENT LOGS ---
+def write_persistent_log(log_id, error_text):
+    try:
+        with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:
+            f.write(f"=== LOG_ID: {log_id} ===\n{error_text}\n=====================\n\n")
+    except Exception as e:
+        print(f"Error saving log: {e}")
+
+def read_persistent_log(log_id):
+    if not os.path.exists(LOG_FILE_PATH):
+        return "⚠️ Log traces empty or no crashes recorded yet."
+    try:
+        with open(LOG_FILE_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
+        match = re.search(r"=== LOG_ID: " + log_id + r" ===\n(.*?)\n=====================", content, re.DOTALL)
+        if match:
+            return match.group(1)
+    except Exception as e:
+        return f"⚠️ Error reading logs: {str(e)}"
+    return "⚠️ Log traces purged from memory block or expired."
 
 # --- PREMIUM HOME PANEL KEYBOARD ---
 def main_keyboard():
@@ -47,7 +72,7 @@ def advanced_settings_keyboard():
     )
     markup.add(
         types.InlineKeyboardButton("💬 LIVE SUPPORT", url=f"t.me/{OWNER_USERNAME}"),
-        types.InlineKeyboardButton("🔄 PURGE DATABASE", callback_data="refresh_engine")
+        types.InlineKeyboardButton("🔄 PURGE LOG FILE", callback_data="refresh_engine")
     )
     return markup
 
@@ -68,14 +93,14 @@ def start(message):
         user_sessions[user_id] = {}
 
     haunted_caption = (
-        "⚡ <b>ADITYA MONSTER HOST v9.0 SUBPROCESS FIXED</b> ⚡\n"
+        "⚡ <b>ADITYA MONSTER HOST v10.0 ULTIMATE PRO</b> ⚡\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
         "🟢 <b>SYSTEM STATUS:</b> <code>SECURE ONLINE</code>\n"
-        "🚀 <b>CORE ENGINE:</b> <code>SUBPROCESS ISOLATION</code>\n"
+        "🚀 <b>CORE ENGINE:</b> <code>REAL VPS SUBPROCESS NODES</code>\n"
         "🛡️ <b>SECURITY LAYER:</b> <code>PERSISTENT STORAGE LOGS</code>\n"
         "⏰ <b>UPTIME ACCURACY:</b> <code>24/7 REAL-TIME ACTIVE ✅</code>\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-        "<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA ASLI SCRIPT REAL ENVIRONMENT MEIN CHALEGA 24/7 STAGE APPROVAL KE BAAD.</i>"
+        "<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA ASLI CODE SUBPROCESS INDEPENDENT SANDBOX MEIN 24/7 LIVE CHALEGA APPROVAL KE BAAD.</i>"
     )
     
     if os.path.exists(IMAGE_PATH):
@@ -90,7 +115,7 @@ def handle_text_menus(message):
     user_id = message.from_user.id
     
     if message.text == "📤 FILE UPLOAD FREE":
-        bot.send_message(message.chat.id, "📥 <b>SEND ME YOUR PYTHON FILE (.py) NOW:</b>\n\n<i>File check hone ke baad Admin approval panel par forward ho jayegi.</i>", parse_mode='HTML')
+        bot.send_message(message.chat.id, "📥 <b>SEND ME YOUR PYTHON FILE (.py) NOW:</b>\n\n<i>File binary filters pass hote hi Admin verification channel par forward ho jayegi.</i>", parse_mode='HTML')
         
     elif message.text == "👑 GET PREMIUM":
         premium_text = (
@@ -119,9 +144,9 @@ def handle_text_menus(message):
             f"👥 <b>TOTAL ACTIVE USERS:</b> <code>{total_users}</code>\n"
             f"🤖 <b>REAL BACKGROUND RUNNING BOTS:</b> <code>{active_bots}</code>\n"
             f"📈 <b>TOTAL DEPLOYMENTS OVERALL:</b> <code>{total_files_hosted}</code>\n"
-            f"🛡️ <b>PRIVACY ENGINE STATE:</b> <code>Subprocess Sandbox Protection (100%)</code>\n"
+            f"🛡️ <b>PRIVACY ENGINE STATE:</b> <code>Subprocess Isolated Sandbox (100%)</code>\n"
             "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-            "✅ <b>All operational security systems are stable.</b>"
+            "✅ <b>All operational execution models are stable.</b>"
         )
         bot.send_message(message.chat.id, stats_text, parse_mode='HTML')
 
@@ -133,11 +158,11 @@ def handle_text_menus(message):
         time.sleep(1.2)
         bot.edit_message_text("🚀 <b>SERVER CORE BOOSTED SUCCESSFUL! RAM TIMEOUT OPTIMIZED TO MAXIMUM ✅</b>", message.chat.id, status_boost.message_id, parse_mode='HTML')
 
-# --- 🚀 SUBPROCESS RE-ENGINEERED EXECUTOR (NO MORE LOG PURGED PROBLEM) 🚀 ---
+# --- 🚀 SUBPROCESS RE-ENGINEERED EXECUTOR (NO MORE LOG PURGED) 🚀 ---
 def run_isolated_subprocess(temp_filename, bot_id, filename, target_user, log_id):
     global total_files_hosted
     try:
-        # User ke code ko bilkul alag processes me background me run karna taaki real logic safe chale
+        # Bandey ka code alag unique process me background me chalega
         process = subprocess.Popen(
             [sys.executable, temp_filename],
             stdout=subprocess.PIPE,
@@ -150,13 +175,13 @@ def run_isolated_subprocess(temp_filename, bot_id, filename, target_user, log_id
         
         bot.send_message(target_user, f"✅ <b>AUTOMATIC DEPLOYING SUCCESSFUL 🎉</b>\n\n📄 File: <code>{filename}</code>\n⏰ Uptime State: <b>🟢 REAL 24/7 SECURE ACTIVE WITH ASLI CODE LOGIC</b>", parse_mode='HTML')
         
-        # Capture error logs persistently if the process ends or crashes later
+        # Real-time background stream monitor for crashes
         stdout, stderr = process.communicate()
         if process.returncode != 0 and stderr:
-            error_logs[log_id] = f"--- RUNTIME ERROR IN USER CODE ---\n{stderr}"
+            write_persistent_log(log_id, f"--- RUNTIME CRASH IN USER SCRIPT ---\n{stderr}")
             
     except Exception as e:
-        error_logs[log_id] = f"--- SYSTEM ISOLATION CRASH ---\n{str(e)}\n{traceback.format_exc()}"
+        write_persistent_log(log_id, f"--- SYSTEM EXECUTOR CRASH ---\n{str(e)}\n{traceback.format_exc()}")
 
 # --- FILE INPUT RECEIVED SYSTEM ---
 @bot.message_handler(content_types=['document'])
@@ -172,7 +197,7 @@ def handle_auto_deployment(message):
 
     bot.send_message(
         message.chat.id, 
-        "⏳ <b>WAIT FOR ADMIN APPROVAL...</b>\n\nAapki script secure channel se Owner approval panel par bhej di gayi hai. Jaise hi approve hoga, automatic deployment instantly start ho jayegi! ✅", 
+        "⏳ <b>WAIT FOR ADMIN APPROVAL...</b>\n\n📄 Aapki script secure channel se Owner approval panel par bhej di gayi hai. Jaise hi approve hoga, automatic deployment instantly start ho jayegi! ✅", 
         parse_mode='HTML'
     )
 
@@ -239,7 +264,7 @@ def handle_query(call):
             return
 
         # 🚀 AUTOMATIC DEPLOY STATUS START
-        bot.send_message(target_user, f"🚀 <b>AUTOMATIC DEPLOYING STARTED...</b>\n\n⚙️ <i>Injecting 24/7 sandboxed live parameters into background modules. Running Full Independent Engine...</i>", parse_mode='HTML')
+        bot.send_message(target_user, f"🚀 <b>AUTOMATIC DEPLOYING STARTED...</b>\n\n⚙️ <i>Injecting 24/7 sandboxed live parameters into background modules. Firing Real Subprocess Node...</i>", parse_mode='HTML')
         bot.edit_message_caption(f"🚀 <b>STATUS: DEPLOYING REAL RUNTIME ENGINE...</b>\n📄 File: {filename}", call.message.chat.id, call.message.message_id, parse_mode='HTML')
 
         time.sleep(1.0)
@@ -259,32 +284,30 @@ def handle_query(call):
             extracted_token = token_match.group(1)
             extracted_chat = chat_id_match.group(1) if chat_id_match else DEFAULT_CHAT_ID
 
-            # Sandbox basic API verification check
             try:
                 check_bot = telebot.TeleBot(extracted_token)
                 check_bot.get_me()
             except ApiTelegramException as api_err:
                 raise Exception(f"API Blocked/Invalid: Code {api_err.error_code} ({api_err.description})")
 
-            # --- SAVE INDEPENDENT TEMP FILE FOR USER SCRIPT ---
+            # --- SAVE SECURE NODE FILE IN MOUNTED PERSISTENT STORAGE ---
             bot_id = str(uuid.uuid4())[:8]
-            temp_filename = f"user_bot_{bot_id}.py"
+            temp_filename = os.path.join(STORAGE_DIR, f"user_bot_{bot_id}.py")
             with open(temp_filename, "w", encoding="utf-8") as f:
                 f.write(code_text)
 
-            # Store baseline data structure
             live_threads[bot_id] = {"filename": temp_filename, "process_obj": None, "token": extracted_token}
             user_sessions[target_user][bot_id] = {'name': filename, 'token': extracted_token, 'chat_id': extracted_chat}
 
-            # Fire independent thread via Subprocess
+            # Executing Isolated Subprocess node via Multi-Threading
             t = threading.Thread(target=run_isolated_subprocess, args=(temp_filename, bot_id, filename, target_user, log_id), daemon=True)
             t.start()
             
             bot.edit_message_caption(f"✅ <b>DEPLOYED SUCCESSFUL & REAL ACTIVE 24/7!</b>\n📄 File: {filename}\n⚙️ Node Thread: {bot_id}", call.message.chat.id, call.message.message_id, parse_mode='HTML')
             
         except Exception as e:
-            formatted_error = f"--- SANDBOX ISOLATED CRASH REPORT (ID: {log_id}) ---\n" + "".join(traceback.format_exception(*sys.exc_info()))
-            error_logs[log_id] = formatted_error
+            formatted_error = f"--- API GATEWAY INITIALIZATION CRASH (ID: {log_id}) ---\n" + "".join(traceback.format_exception(*sys.exc_info()))
+            write_persistent_log(log_id, formatted_error)
 
             log_markup = types.InlineKeyboardMarkup()
             log_markup.add(types.InlineKeyboardButton("VIEW LOGS 📋", callback_data=f"log_{log_id}"))
@@ -298,9 +321,9 @@ def handle_query(call):
 
     elif call.data.startswith("log_"):
         log_id = call.data[4:]
-        log_data = error_logs.get(log_id, "⚠️ Log traces not found or code executed cleanly.")
+        log_data = read_persistent_log(log_id)
         if len(log_data) > 4000:
-            log_data = log_data[:4000] + "\n...[LOG EXCEEDED LIMIT]"
+            log_data = log_data[:4000] + "\n...[LOG EXCEEDED TRUNCATION]"
         bot.send_message(call.message.chat.id, f"📋 <b>ISOLATED SCRIPT ERROR STACK (ID: {log_id}):</b>\n\n<code>{log_data}</code>", parse_mode='HTML')
         bot.answer_callback_query(call.id)
         return
@@ -313,33 +336,41 @@ def handle_query(call):
         bot.answer_callback_query(call.id)
 
     elif call.data == "anti_crash_info":
-        bot.send_message(call.message.chat.id, "🛡️ <b>ANTI-PENETRATION FIREWALL:</b> Active ✅\n\nExternal malicious codes ya corrupt scripts aapke parent structural script environment ko exploit nahi kar sakti.", parse_mode='HTML')
+        bot.send_message(call.message.chat.id, "🛡️ <b>ANTI-PENETRATION FIREWALL:</b> Active ✅\n\nBando ke scripts ka internal runtime crash aapke main admin structural core network ko crash nahi karega.", parse_mode='HTML')
         bot.answer_callback_query(call.id)
 
     elif call.data == "refresh_engine":
-        bot.answer_callback_query(call.id, "🔄 Cache Database Purged Clean!", show_alert=True)
+        if os.path.exists(LOG_FILE_PATH):
+            try:
+                os.remove(LOG_FILE_PATH)
+                bot.answer_callback_query(call.id, "🔄 Persistent Log File Purged Clean!", show_alert=True)
+            except:
+                bot.answer_callback_query(call.id, "❌ Error clearing logs.")
+        else:
+            bot.answer_callback_query(call.id, "👍 Log file already clean.", show_alert=True)
 
     elif call.data.startswith("manage_"):
         bot_id = call.data.split("_")[1]
         b_data = user_sessions.get(user_id, {}).get(bot_id)
         if b_data:
             markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton("🛑 REJECT / STOP ENGINE", callback_data=f"stop_{bot_id}"))
+            markup.add(types.InlineKeyboardButton("🛑 TERMINATE HOST NODE", callback_data=f"stop_{bot_id}"))
             bot.edit_message_text(f"🛠 <b>MANAGING DATASTREAM:</b> <code>{b_data['name']}</code>", call.message.chat.id, call.message.message_id, reply_markup=markup, parse_mode='HTML')
 
     elif call.data.startswith("stop_"):
         bot_id = call.data.split("_")[1]
         if bot_id in live_threads:
             try:
-                # Safely terminate independent background subprocess
-                live_threads[bot_id]["process_obj"].terminate()
-                os.remove(live_threads[bot_id]["filename"])
+                if live_threads[bot_id]["process_obj"]:
+                    live_threads[bot_id]["process_obj"].terminate()
+                if os.path.exists(live_threads[bot_id]["filename"]):
+                    os.remove(live_threads[bot_id]["filename"])
             except: pass
             del live_threads[bot_id]
             
         if user_id in user_sessions and bot_id in user_sessions[user_id]:
             del user_sessions[user_id][bot_id]
-        bot.answer_callback_query(call.id, "Deployment Node Terminated.")
+        bot.answer_callback_query(call.id, "Deployment Node Terminated Clean.")
         bot.delete_message(call.message.chat.id, call.message.message_id)
 
 # --- 🔄 INFINITY SERVER LOOP ---
@@ -352,4 +383,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Server Restructuring Network Loop Re-connecting... Error: {e}")
             time.sleep(5)
-                
+        
