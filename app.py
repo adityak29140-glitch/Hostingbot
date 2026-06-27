@@ -11,7 +11,6 @@ from telebot import types
 from telebot.apihelper import ApiTelegramException
 
 # --- RAILWAY PERSISTENT RE-ENGINEERING ---
-# Agar Railway me volume mounted hai toh data safe rahega
 STORAGE_DIR = "/data" if os.path.exists("/data") else os.getcwd()
 LOG_FILE_PATH = os.path.join(STORAGE_DIR, "crash_logs.txt")
 
@@ -19,7 +18,7 @@ LOG_FILE_PATH = os.path.join(STORAGE_DIR, "crash_logs.txt")
 os.environ["PORT"] = os.environ.get("PORT", "8080")
 
 # ⚡ TERA VERIFIED HIGH-SECURITY DETAILS ⚡
-TOKEN = "8773248276:AAEf_2WJpApeVK79QFiRn6ovIyo6S0SeC8E"
+TOKEN = "8926219447:AAEQciCFkb68viWtHGjmrPH_HTOUeJhucTA"  # NAYA TOKEN INJECTED ✅
 DEFAULT_CHAT_ID = "8620962808"  # TERA OWNER CHAT ID
 OWNER_USERNAME = "ADITYAXPASWANJI"
 IMAGE_PATH = "6233.jpg"  # TERI SETUP IMAGE FILE
@@ -158,11 +157,10 @@ def handle_text_menus(message):
         time.sleep(1.2)
         bot.edit_message_text("🚀 <b>SERVER CORE BOOSTED SUCCESSFUL! RAM TIMEOUT OPTIMIZED TO MAXIMUM ✅</b>", message.chat.id, status_boost.message_id, parse_mode='HTML')
 
-# --- 🚀 SUBPROCESS RE-ENGINEERED EXECUTOR (NO MORE LOG PURGED) 🚀 ---
+# --- 🚀 SUBPROCESS EXECUTOR 🚀 ---
 def run_isolated_subprocess(temp_filename, bot_id, filename, target_user, log_id):
     global total_files_hosted
     try:
-        # Bandey ka code alag unique process me background me chalega
         process = subprocess.Popen(
             [sys.executable, temp_filename],
             stdout=subprocess.PIPE,
@@ -175,7 +173,6 @@ def run_isolated_subprocess(temp_filename, bot_id, filename, target_user, log_id
         
         bot.send_message(target_user, f"✅ <b>AUTOMATIC DEPLOYING SUCCESSFUL 🎉</b>\n\n📄 File: <code>{filename}</code>\n⏰ Uptime State: <b>🟢 REAL 24/7 SECURE ACTIVE WITH ASLI CODE LOGIC</b>", parse_mode='HTML')
         
-        # Real-time background stream monitor for crashes
         stdout, stderr = process.communicate()
         if process.returncode != 0 and stderr:
             write_persistent_log(log_id, f"--- RUNTIME CRASH IN USER SCRIPT ---\n{stderr}")
@@ -222,7 +219,7 @@ def handle_auto_deployment(message):
     )
     bot.send_document(DEFAULT_CHAT_ID, message.document.file_id, caption=admin_caption, reply_markup=owner_markup, parse_mode='HTML')
 
-# --- CALLBACK SYSTEM PRO (HANDLES APPROVAL & REJECT UPDATES) ---
+# --- CALLBACK SYSTEM PRO ---
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     user_id = call.from_user.id
@@ -290,7 +287,7 @@ def handle_query(call):
             except ApiTelegramException as api_err:
                 raise Exception(f"API Blocked/Invalid: Code {api_err.error_code} ({api_err.description})")
 
-            # --- SAVE SECURE NODE FILE IN MOUNTED PERSISTENT STORAGE ---
+            # --- SAVE SECURE NODE FILE ---
             bot_id = str(uuid.uuid4())[:8]
             temp_filename = os.path.join(STORAGE_DIR, f"user_bot_{bot_id}.py")
             with open(temp_filename, "w", encoding="utf-8") as f:
@@ -299,7 +296,6 @@ def handle_query(call):
             live_threads[bot_id] = {"filename": temp_filename, "process_obj": None, "token": extracted_token}
             user_sessions[target_user][bot_id] = {'name': filename, 'token': extracted_token, 'chat_id': extracted_chat}
 
-            # Executing Isolated Subprocess node via Multi-Threading
             t = threading.Thread(target=run_isolated_subprocess, args=(temp_filename, bot_id, filename, target_user, log_id), daemon=True)
             t.start()
             
@@ -336,7 +332,7 @@ def handle_query(call):
         bot.answer_callback_query(call.id)
 
     elif call.data == "anti_crash_info":
-        bot.send_message(call.message.chat.id, "🛡️ <b>ANTI-PENETRATION FIREWALL:</b> Active ✅\n\nBando ke scripts ka internal runtime crash aapke main admin structural core network ko crash nahi karega.", parse_mode='HTML')
+        bot.send_message(call.message.chat.id, "🛡️ <b>ANTI-PENETRATION FIREWALL:</b> Active ✅", parse_mode='HTML')
         bot.answer_callback_query(call.id)
 
     elif call.data == "refresh_engine":
@@ -383,4 +379,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Server Restructuring Network Loop Re-connecting... Error: {e}")
             time.sleep(5)
-        
+    
