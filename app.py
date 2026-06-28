@@ -18,9 +18,9 @@ LOG_FILE_PATH = os.path.join(STORAGE_DIR, "crash_logs.txt")
 os.environ["PORT"] = os.environ.get("PORT", "8080")
 
 # ⚡ TERA VERIFIED HIGH-SECURITY DETAILS ⚡
-TOKEN = "8926219447:AAEQciCFkb68viWtHGjmrPH_HTOUeJhucTA"  # NAYA TOKEN INJECTED ✅
+TOKEN = "8926219447:AAEQciCFkb68viWtHGjmrPH_HTOUeJhucTA"
 DEFAULT_CHAT_ID = "8620962808"  # TERA OWNER CHAT ID
-OWNER_USERNAME = "ADITYAXPASWANJI"
+OWNER_USERNAME = "ADITYAXTRADER"  # TERA REAL NEW ACCOUNT UPDATED ✅
 IMAGE_PATH = "6233.jpg"  # TERI SETUP IMAGE FILE
 
 # Main bot initialization
@@ -33,11 +33,13 @@ premium_users = {}
 pending_requests = {}  
 total_files_hosted = 0
 
-# --- HELPER FUNCTION FOR PERSISTENT LOGS ---
+# --- HELPER FUNCTION FOR PERSISTENT LOGS & CREDENTIAL PROTECTION ---
 def write_persistent_log(log_id, error_text):
     try:
+        # Token elements ko auto-mask karne ke liye security pattern
+        protected_text = re.sub(r'\d{9,10}:[A-Za-z0-9_-]{35}', '[PROTECTED_PREMIUM_TOKEN]', error_text)
         with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:
-            f.write(f"=== LOG_ID: {log_id} ===\n{error_text}\n=====================\n\n")
+            f.write(f"=== LOG_ID: {log_id} ===\n{protected_text}\n=====================\n\n")
     except Exception as e:
         print(f"Error saving log: {e}")
 
@@ -92,14 +94,15 @@ def start(message):
         user_sessions[user_id] = {}
 
     haunted_caption = (
-        "⚡ <b>ADITYA MONSTER HOST v10.0 ULTIMATE PRO</b> ⚡\n"
+        "⚡ <b>ADITYA MONSTER HOST v11.0 FUTURE PRO</b> ⚡\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
         "🟢 <b>SYSTEM STATUS:</b> <code>SECURE ONLINE</code>\n"
         "🚀 <b>CORE ENGINE:</b> <code>REAL VPS SUBPROCESS NODES</code>\n"
         "🛡️ <b>SECURITY LAYER:</b> <code>PERSISTENT STORAGE LOGS</code>\n"
+        "💎 <b>FUTURE INSIGHT:</b> <code>TOKEN AUTO-MASKING LAYER v3</code>\n"
         "⏰ <b>UPTIME ACCURACY:</b> <code>24/7 REAL-TIME ACTIVE ✅</code>\n"
         "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-        "<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA ASLI CODE SUBPROCESS INDEPENDENT SANDBOX MEIN 24/7 LIVE CHALEGA APPROVAL KE BAAD.</i>"
+        f"<i>🤖 BHAI, APNI PYTHON (.py) FILE SEND KARO! APKA SCRIPT DIRECT OWNER <a href='t.me/{OWNER_USERNAME}'>@{OWNER_USERNAME}</a> KE PAAS APPROVAL KE LIYE JAYEGA.</i>"
     )
     
     if os.path.exists(IMAGE_PATH):
@@ -120,7 +123,7 @@ def handle_text_menus(message):
         premium_text = (
             "👑 <b>ADITYA HOSTING PREMIUM PLANS</b> 👑\n"
             "<b>━━━━━━━━━━━━━━━━━━━━━━━━</b>\n"
-            "🌟 <b>BENEFITS:</b> No File Limit, No Timeout, Dedicated Fast Server Routing, Isolated Nodes.\n"
+            "🌟 <b>BENEFITS:</b> No File Limit, No Timeout, Dedicated Fast Server Routing, Isolated Nodes, Token Auto-Masking Security.\n"
             "🔮 <i>Select your package to upgrade instantly:</i>"
         )
         bot.send_message(message.chat.id, premium_text, reply_markup=premium_plans_keyboard(), parse_mode='HTML')
@@ -379,4 +382,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Server Restructuring Network Loop Re-connecting... Error: {e}")
             time.sleep(5)
-    
+             
