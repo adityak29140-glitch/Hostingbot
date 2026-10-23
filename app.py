@@ -4,7 +4,7 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Aapka Naya Bot Token
-TOKEN = "8998795222:AAEAUpj2efPF0n0x1KaBamzb_cZ5Ge47RT4"
+TOKEN = "8998795222:AAEUod6L6WhmUsjPwnUMbNllcPLCgJszhmk"
 bot = telebot.TeleBot(TOKEN)
 
 # Channels Config
