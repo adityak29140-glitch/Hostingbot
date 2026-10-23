@@ -16,8 +16,11 @@ CHANNEL_2_ID = -1004479477443
 CHANNEL_2_LINK = "https://t.me/+_lgMP6V9O7thZmY1"
 
 HOST_DIR = "hosted_bots"
-if not os.path.exists(HOST_DIR):
-    os.makedirs(HOST_DIR)
+PENDING_DIR = "pending_bots"
+
+for d in [HOST_DIR, PENDING_DIR]:
+    if not os.path.exists(d):
+        os.makedirs(d)
 
 running_processes = {}
 user_history = {}
@@ -39,10 +42,9 @@ def get_join_keyboard():
     markup.add(InlineKeyboardButton("✅ VERIFY NOW", callback_data="check_join"))
     return markup
 
-# Permanent Bottom Reply Keyboard
 def get_permanent_menu():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row(KeyboardButton("📥 Upload File"))
+    markup.row(KeyboardButton("📥 Upload File"), KeyboardButton("📦 PIP Upload"))
     markup.row(KeyboardButton("📁 My Bots"), KeyboardButton("📊 My Files"))
     markup.row(KeyboardButton("📜 My History"), KeyboardButton("🗑️ Delete Bot"))
     return markup
@@ -95,7 +97,6 @@ def handle_verification(call):
     else:
         bot.answer_callback_query(call.id, "Aapne abhi tak dono channels join nahi kiye hain!", show_alert=True)
 
-# Handling Permanent Keyboard Button Texts
 @bot.message_handler(func=lambda message: True)
 def handle_text_menu(message):
     user_id = message.from_user.id
@@ -106,10 +107,12 @@ def handle_text_menu(message):
         return
 
     if text == "📥 Upload File":
-        bot.reply_to(message, "Ab apni .py (Python) file direct chat me send karo, main usko automatically host kar dunga!")
+        bot.reply_to(message, "Ab apni .py (Python) file direct chat me send karo, wo admin approval ke liye chali jayegi!")
+
+    elif text == "📦 PIP Upload":
+        bot.reply_to(message, "Ab apni `requirements.txt` file send karo taaki required modules install kiye ja sakein (Yeh bhi admin approval ke baad apply hoga)!")
 
     elif text == "📁 My Bots":
-        # Check active processes and clean up dead ones
         dead_keys = []
         for k, p in running_processes.items():
             if k.startswith(f"{user_id}_") and p.poll() is not None:
@@ -121,7 +124,7 @@ def handle_text_menu(message):
         if user_active:
             resp = "AAPKE ACTIVE LIVE BOTS:\n\n" + "\n".join([f"• {fn}" for fn in user_active])
         else:
-            resp = "Aapka koi bhi bot abhi live nahi chal raha hai (ya crash ho gaya hai)."
+            resp = "Aapka koi bhi bot abhi live nahi chal raha hai."
         bot.reply_to(message, resp)
 
     elif text == "📊 My Files":
@@ -170,6 +173,7 @@ def handle_delete_callback(call):
     else:
         bot.answer_callback_query(call.id, "File nahi mili ya pehle se band hai.", show_alert=True)
 
+# User uploads document (.py or requirements.txt) -> Sends to Admin for approval
 @bot.message_handler(content_types=['document'])
 def handle_document(message):
     user_id = message.from_user.id
@@ -182,77 +186,137 @@ def handle_document(message):
         return
 
     file_name = message.document.file_name
-    if not file_name.endswith('.py'):
-        bot.reply_to(message, "Sirf .py (Python) files allowed hain!")
+    if not (file_name.endswith('.py') or file_name == 'requirements.txt'):
+        bot.reply_to(message, "Sirf .py (Python) files ya requirements.txt allowed hain!")
         return
-
-    # Hacker style 1 to 100 loading animation for file deployment
-    msg = bot.reply_to(message, f"⚡ HACKER DEPLOYMENT STARTED FOR `{file_name}`...\n`[▒▒▒▒▒▒▒▒▒▒] 0%`", parse_mode="Markdown")
-    for i in range(20, 101, 20):
-        time.sleep(0.3)
-        filled = '█' * (i // 10)
-        empty = '▒' * (10 - (i // 10))
-        bot.edit_message_text(
-            chat_id=message.chat.id,
-            message_id=msg.message_id,
-            text=f"⚡ DEPLOYING & INSTALLING DEPENDENCIES...\n`[{filled}{empty}] {i}%`",
-            parse_mode="Markdown"
-        )
 
     try:
         file_info = bot.get_file(message.document.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
 
-        user_folder = os.path.join(HOST_DIR, str(user_id))
-        os.makedirs(user_folder, exist_ok=True)
-        file_path = os.path.join(user_folder, file_name)
+        pending_user_dir = os.path.join(PENDING_DIR, str(user_id))
+        os.makedirs(pending_user_dir, exist_ok=True)
+        pending_path = os.path.join(pending_user_dir, file_name)
 
-        with open(file_path, 'wb') as new_file:
-            new_file.write(downloaded_file)
+        with open(pending_path, 'wb') as f:
+            f.write(downloaded_file)
 
-        process_key = f"{user_id}_{file_name}"
-        if process_key in running_processes:
-            try:
-                running_processes[process_key].terminate()
-            except:
-                pass
-
-        # Run process and capture errors if it crashes immediately
-        process = subprocess.Popen(["python3", file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        running_processes[process_key] = process
-
-        # Wait 2 seconds to check if script crashed instantly
-        time.sleep(2)
-        if process.poll() is not None:
-            # Script crashed! Read error message
-            out, err = process.communicate()
-            err_text = err.decode('utf-8', errors='ignore')[:300] # trim error
-            bot.edit_message_text(
-                f"❌ **Hosting Failed! Script Crashed:**\n\n`{err_text}`",
-                chat_id=message.chat.id,
-                message_id=msg.message_id,
-                parse_mode="Markdown"
-            )
-            return
-
-        if user_id not in user_history:
-            user_history[user_id] = []
-        user_history[user_id].append(f"Hosted: {file_name} at {time.strftime('%Y-%m-%d %H:%M:%S')}")
-
-        success_text = (
-            "FILE SUCCESSFULLY LIVE HO GAYI! 🎉\n\n"
-            f"File Name: {file_name}\n"
-            "Status: Active & Running 24/7"
+        # Send approval request to Admin
+        admin_markup = InlineKeyboardMarkup()
+        admin_markup.add(
+            InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user_id}_{file_name}"),
+            InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}_{file_name}")
         )
-        bot.edit_message_text(
-            success_text,
-            chat_id=message.chat.id,
-            message_id=msg.message_id
+
+        file_type_label = "PYTHON BOT FILE" if file_name.endswith('.py') else "PIP REQUIREMENTS FILE"
+        caption = (
+            f"📥 **NEW {file_type_label} APPROVAL REQUEST**\n\n"
+            f"👤 **User ID:** `{user_id}`\n"
+            f"📁 **File Name:** `{file_name}`\n\n"
+            f"Neeche diye gaye button se Approve ya Reject karein:"
         )
+
+        bot.send_document(
+            ADMIN_ID,
+            message.document.file_id,
+            caption=caption,
+            parse_mode="Markdown",
+            reply_markup=admin_markup
+        )
+
+        bot.reply_to(message, f"⚡ Aapki `{file_name}` file Admin ke paas approval ke liye bhej di gayi hai!")
 
     except Exception as e:
-        bot.edit_message_text(f"Hosting Error: {str(e)}", chat_id=message.chat.id, message_id=msg.message_id)
+        bot.reply_to(message, f"Error sending file for approval: {str(e)}")
 
-print("Bot Robust Error Detection Ke Saath Live Ho Gaya Hai...")
+# Admin Approval / Rejection Handler
+@bot.callback_query_handler(func=lambda call: call.data.startswith(("approve_", "reject_")))
+def handle_admin_approval(call):
+    if call.from_user.id != ADMIN_ID:
+        bot.answer_callback_query(call.id, "Aap admin nahi hain!", show_alert=True)
+        return
+
+    data = call.data
+    action, rest = data.split("_", 1)
+    parts = rest.split("_", 1)
+    target_user_id = int(parts[0])
+    file_name = parts[1]
+
+    pending_path = os.path.join(PENDING_DIR, str(target_user_id), file_name)
+
+    if action == "approve":
+        if not os.path.exists(pending_path):
+            bot.answer_callback_query(call.id, "File pending folder me nahi mili!", show_alert=True)
+            return
+
+        user_folder = os.path.join(HOST_DIR, str(target_user_id))
+        os.makedirs(user_folder, exist_ok=True)
+        target_path = os.path.join(user_folder, file_name)
+
+        os.rename(pending_path, target_path)
+
+        if file_name == "requirements.txt":
+            # Install requirements via pip
+            try:
+                subprocess.run(["pip", "install", "-r", target_path], check=True)
+                bot.answer_callback_query(call.id, "Requirements installed successfully!", show_alert=True)
+            except Exception as e:
+                bot.answer_callback_query(call.id, f"Pip install error: {e}", show_alert=True)
+        else:
+            # Run Python bot file
+            process_key = f"{target_user_id}_{file_name}"
+            if process_key in running_processes:
+                try:
+                    running_processes[process_key].terminate()
+                except:
+                    pass
+
+            process = subprocess.Popen(["python3", target_path])
+            running_processes[process_key] = process
+
+            if target_user_id not in user_history:
+                user_history[target_user_id] = []
+            user_history[target_user_id].append(f"Hosted: {file_name} at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+            bot.answer_callback_query(call.id, "File Approved & Deployed Successfully!", show_alert=True)
+
+        bot.edit_message_caption(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            caption=f"✅ **APPROVED & PROCESSED**\n\nUser ID: `{target_user_id}`\nFile: `{file_name}`",
+            parse_mode="Markdown"
+        )
+
+        try:
+            bot.send_message(
+                target_user_id,
+                f"🎉 **Aapki File Admin Dwara Approve Ho Gayi Hai!**\n\n📁 File: `{file_name}`\n🚀 Status: Processed Successfully",
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print(f"Failed to notify user: {e}")
+
+    elif action == "reject":
+        if os.path.exists(pending_path):
+            os.remove(pending_path)
+
+        bot.answer_callback_query(call.id, "File Rejected!", show_alert=True)
+        bot.edit_message_caption(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            caption=f"❌ **REJECTED**\n\nUser ID: `{target_user_id}`\nFile: `{file_name}`",
+            parse_mode="Markdown"
+        )
+
+        try:
+            bot.send_message(
+                target_user_id,
+                f"❌ **Aapki File Admin Dwara Reject Kar Di Gayi Hai.**\n\n📁 File: `{file_name}`",
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print(f"Failed to notify user: {e}")
+
+print("Bot PIP Upload aur Admin Approval ke sath live ho gaya hai...")
 bot.infinity_polling()
-                                 
+        
