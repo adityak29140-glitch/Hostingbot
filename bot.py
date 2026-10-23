@@ -1,322 +1,393 @@
+import json
 import os
-import subprocess
-import time
-import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from flask import Flask, request, jsonify
+import requests
 
-TOKEN = "8998795222:AAF_TUI7vT4dSHp28gjUQoTxDwTeH4SMjD4"
-ADMIN_ID = 8903693040
-bot = telebot.TeleBot(TOKEN)
+app = Flask(__name__)
 
-# Channels Config
-CHANNEL_1_ID = -1004348616526
-CHANNEL_1_LINK = "https://t.me/+Mi0ELzGRzChmOTBl"
+# Bot Configuration
+BOT_TOKEN = "8963703963:AAF-2e5poOVF7oqNPhg70oF7NL7Cv0BGdfE"
+API_URL = f"https://api.telegram.org/bot{8963703963:AAF-2e5poOVF7oqNPhg70oF7NL7Cv0BGdfE}/"
+OWNER_ID = ID: 8903693040
+ADMIN_IDS = [ID: 8903693040]
+CHANNEL_LINK = "https://t.me/+Mi0ELzGRzChmOTBl"
+CHANNEL_USERNAME = "PRIVATE HACK FREE😁"
 
-CHANNEL_2_ID = -1004479477443
-CHANNEL_2_LINK = "https://t.me/+_lgMP6V9O7thZmY1"
+# Database configuration
+DB_FILE = "bot_database.json"
 
-HOST_DIR = "hosted_bots"
-PENDING_DIR = "pending_bots"
+# Initialize database
+def init_db():
+    if not os.path.exists(DB_FILE):
+        default_data = {
+            "users": [],
+            "admins": [8903693040],
+            "banned": [],
+            "settings": {
+                "require_join": True
+            }
+        }
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(default_data, f, indent=4)
+    with open(DB_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-for d in [HOST_DIR, PENDING_DIR]:
-    if not os.path.exists(d):
-        os.makedirs(d)
+def save_db(data):
+    with open(DB_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
 
-running_processes = {}
-user_history = {}
+# Function to check if user is admin
+def is_admin(user_id):
+    if user_id == OWNER_ID or user_id in ADMIN_IDS:
+        return True
+    db = init_db()
+    return user_id in db.get("admins", [])
 
-def is_user_joined(user_id):
+# Function to check if user is banned
+def is_banned(user_id):
+    db = init_db()
+    return user_id in db.get("banned", [])
+
+# Function to check channel membership
+def check_channel_membership(chat_id, user_id):
+    url = f"{API_URL}getChatMember?chat_id=@{CHANNEL_USERNAME}&user_id={user_id}"
     try:
-        member1 = bot.get_chat_member(CHANNEL_1_ID, user_id)
-        member2 = bot.get_chat_member(CHANNEL_2_ID, user_id)
-        valid_statuses = ['creator', 'administrator', 'member', 'restricted']
-        return (member1.status in valid_statuses) and (member2.status in valid_statuses)
+        response = requests.get(url)
+        data = response.json()
+        if data.get("ok") and "result" in data:
+            status = data["result"].get("status")
+            return status in ["member", "administrator", "creator"]
     except Exception as e:
-        print(f"Check Error: {e}")
-        return False
+        print(f"Error checking membership: {e}")
+    return False
 
-def get_join_keyboard():
-    markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("📢 JOIN CHANNEL 1", url=CHANNEL_1_LINK))
-    markup.add(InlineKeyboardButton("📢 JOIN CHANNEL 2", url=CHANNEL_2_LINK))
-    markup.add(InlineKeyboardButton("✅ VERIFY NOW", callback_data="check_join"))
-    return markup
+# Function to send message
+def send_message(chat_id, text, keyboard=None):
+    url = f"{API_URL}sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "HTML"
+    }
+    if keyboard:
+        payload["reply_markup"] = json.dumps(keyboard)
+    
+    try:
+        response = requests.post(url, data=payload)
+        return response.json()
+    except Exception as e:
+        print(f"Error sending message: {e}")
+        return None
 
-def get_permanent_menu():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row(KeyboardButton("📥 Upload File"), KeyboardButton("📦 PIP Upload"))
-    markup.row(KeyboardButton("📁 My Bots"), KeyboardButton("📊 My Files"))
-    markup.row(KeyboardButton("📜 My History"), KeyboardButton("🗑️ Delete Bot"))
-    return markup
+# Function to edit message
+def edit_message(chat_id, message_id, text, keyboard=None):
+    url = f"{API_URL}editMessageText"
+    payload = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "text": text,
+        "parse_mode": "HTML"
+    }
+    if keyboard:
+        payload["reply_markup"] = json.dumps(keyboard)
+    
+    try:
+        response = requests.post(url, data=payload)
+        return response.json()
+    except Exception as e:
+        print(f"Error editing message: {e}")
+        return None
 
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    user_id = message.from_user.id
-    if is_user_joined(user_id):
-        welcome_msg = (
-            "WELCOME ❤️ HOSTING BOT 24/7 ACTIVE ✅\n\n"
-            "Aapka verification successful ho gaya hai!\n"
-            "Neeche permanent menu se option select karein:"
-        )
-        bot.reply_to(message, welcome_msg, reply_markup=get_permanent_menu())
-    else:
-        ask_join_text = (
-            "WELCOME ❤️ HOSTING BOT 24/7 ACTIVE ✅\n\n"
-            "PLEASE CHANNEL JOIN 🤨 START BOT ❤️‍🩹\n\n"
-            "Pehle dono channels join karein aur phir 'VERIFY NOW' par click karein!"
-        )
-        bot.reply_to(message, ask_join_text, reply_markup=get_join_keyboard())
+# Function to get main keyboard
+def get_main_keyboard():
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "📱 Phone Number", "callback_data": "lookup_phone"},
+                {"text": "🚗 Vehicle Number", "callback_data": "lookup_vehicle"}
+            ],
+            [
+                {"text": "🆔 Aadhaar Card", "callback_data": "lookup_aadhaar"},
+                {"text": "📮 Pincode", "callback_data": "lookup_pincode"}
+            ],
+            [
+                {"text": "🏢 GST Number", "callback_data": "lookup_gst"},
+                {"text": "💸 UPI ID", "callback_data": "lookup_upi"}
+            ],
+            [
+                {"text": "🏦 IFSC Code", "callback_data": "lookup_ifsc"},
+                {"text": "🪪 Pan Card", "callback_data": "lookup_pan"}
+            ],
+            [
+                {"text": "🌐 IP Lookup", "callback_data": "lookup_ip"},
+                {"text": "🌤️ Weather Lookup", "callback_data": "lookup_weather"}
+            ],
+            [
+                {"text": "👨‍👩‍👧‍👦 Family", "callback_data": "lookup_family"},
+                {"text": "📷 Instagram", "callback_data": "lookup_instagram"}
+            ],
+            [
+                {"text": "📡 TG Lookup", "callback_data": "lookup_tg"},
+                {"text": "📧 Email", "callback_data": "lookup_email"}
+            ],
+            [
+                {"text": "🔢 IMEI", "callback_data": "lookup_imei"},
+                {"text": "🍛 RASHAN", "callback_data": "lookup_rashan"}
+            ],
+            [
+                {"text": "❓ Help", "callback_data": "help"},
+                {"text": "📊 Statistics", "callback_data": "stats"}
+            ]
+        ]
+    }
 
-@bot.callback_query_handler(func=lambda call: call.data == "check_join")
-def handle_verification(call):
-    user_id = call.from_user.id
-    if is_user_joined(user_id):
-        msg = bot.edit_message_text(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            text="VERIFICATION STARTED...\n[▒▒▒▒▒▒▒▒▒▒] 0%"
-        )
-        for i in range(20, 101, 20):
-            time.sleep(0.3)
-            filled = '█' * (i // 10)
-            empty = '▒' * (10 - (i // 10))
-            bot.edit_message_text(
-                chat_id=call.message.chat.id,
-                message_id=msg.message_id,
-                text=f"CHECKING MEMBERSHIP & SECURITY...\n[{filled}{empty}] {i}%"
-            )
+# Function to get admin panel keyboard
+def get_admin_keyboard():
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "➕ Add Inline Button", "callback_data": "admin_add_button"},
+                {"text": "🔗 Add Button API", "callback_data": "admin_add_api"}
+            ],
+            [
+                {"text": "📢 Add Channel", "callback_data": "admin_add_channel"},
+                {"text": "👥 Add Admin", "callback_data": "admin_add_admin"}
+            ],
+            [
+                {"text": "📣 Broadcast", "callback_data": "admin_broadcast"},
+                {"text": "🚫 Ban User", "callback_data": "admin_ban"}
+            ],
+            [
+                {"text": "✅ Unban User", "callback_data": "admin_unban"},
+                {"text": "👥 All Users", "callback_data": "admin_users"}
+            ],
+            [
+                {"text": "◀️ Back to Main", "callback_data": "back_to_main"}
+            ]
+        ]
+    }
+
+# Function to get example message
+def get_example_message(type_key):
+    examples = {
+        'phone': "• 📱 Phone: `9876543210`\n• 🏢 GST: `27ABCDE1234F1Z5`\n• 💸 UPI: `username@bank`\n• 🏦 IFSC: `SBIN0001234`\n• 📮 Pincode: `110001`\n• 🚗 Vehicle: `UP32QP0001`\n• 🪪 Pan Card: `ABCDE1234F`\n• 🌐 IP: `8.8.8.8`\n• 📧 Email: `user@example.com`\n• 🔢 IMEI: `123456789012345`",
+        'weather': "• 🌤️ Weather: `Mumbai` or `Mumbai,IN`\n• Example: `London` or `New York,US`",
+        'instagram': "• 📷 Instagram: `username`\n• Example: `instagram` or `cristiano`",
+        'tg': "• 📡 TG Lookup: `username`\n• Example: `@username` or `username`",
+        'family': "• 👨‍👩‍👧‍👦 Family: `Family Name`\n• Example: `Singh` or `Sharma`",
+        'rashan': "• 🍛 RASHAN: `Ration Card Number`\n• Example: `123456789012`"
+    }
+    
+    base_text = "🔍 *Send Input*\n━━━━━━━━━━━━━━━━━━━━\n\n"
+    base_text += "Please send the required information:\n\n"
+    base_text += "📋 *Examples:*\n"
+    base_text += examples.get(type_key, examples['phone'])
+    base_text += "\n━━━━━━━━━━━━━━━━━━━━\n"
+    base_text += "Made by @REDX64\n"
+    base_text += "Powered By ROH-X"
+    
+    return base_text
+
+# Function to perform lookup
+def perform_lookup(lookup_type, input_text):
+    apis = {
+        'phone': f'https://api.example.com/phone/{input_text}',
+        'aadhaar': f'https://api.example.com/aadhaar/{input_text}',
+        'gst': f'https://api.example.com/gst/{input_text}',
+        'upi': f'https://api.example.com/upi/{input_text}',
+        'ifsc': f'https://api.example.com/ifsc/{input_text}',
+        'pincode': f'https://api.example.com/pincode/{input_text}',
+        'vehicle': f'https://api.example.com/vehicle/{input_text}',
+        'pan': f'https://api.example.com/pan/{input_text}',
+        'ip': f'https://api.example.com/ip/{input_text}',
+        'weather': f'https://api.example.com/weather/{input_text}',
+        'instagram': f'https://api.example.com/instagram/{input_text}',
+        'tg': f'https://tg-2-num-api-org.vercel.app/api/search?userid={input_text}',
+        'email': f'https://api.example.com/email/{input_text}',
+        'imei': f'https://api.example.com/imei/{input_text}',
+        'rashan': f'https://api.example.com/rashan/{input_text}',
+        'family': f'https://api.example.com/family/{input_text}'
+    }
+    
+    response = f"🔍 *{lookup_type.capitalize()} Lookup Result*\n━━━━━━━━━━━━━━━━━━━━\n\n"
+    response += f"📝 *Input:* `{input_text}`\n\n"
+    response += "⚠️ *Note:* API integration is pending.\n"
+    response += f"API Endpoint: {apis.get(lookup_type, 'N/A')}\n\n"
+    response += "━━━━━━━━━━━━━━━━━━━━\n"
+    response += "Made by @Xyz_Zico\n"
+    response += "Powered By ROH-X"
+    
+    return response
+
+# Function to get welcome message
+def get_welcome_message():
+    text = "🤖 *Welcome To Multi Lookup Bot*\n━━━━━━━━━━━━━━━━━━━━\n\n"
+    text += "🔍 *Features:*\n"
+    text += "• 📱 Phone Number Lookup\n"
+    text += "• 🆔 Aadhaar Card Lookup\n"
+    text += "• 🏢 GST Number Lookup\n"
+    text += "• 💸 UPI ID Lookup\n"
+    text += "• 🏦 IFSC Code Lookup\n"
+    text += "• 📮 Pincode Lookup\n"
+    text += "• 🚗 Vehicle RC Lookup\n"
+    text += "• 🪪 Pan Card Lookup\n"
+    text += "• 🌐 IP Address Lookup\n"
+    text += "• 🌤️ Weather Lookup\n"
+    text += "• 👨‍👩‍👧‍👦 Family Details Lookup\n"
+    text += "• 📷 Instagram Profile Lookup\n"
+    text += "• 📡 Telegram Profile Lookup\n"
+    text += "• 📧 Email Address Lookup\n"
+    text += "• 🔢 IMEI Number Lookup\n"
+    text += "• 🍛 RASHAN Card Lookup\n"
+    text += "\n━━━━━━━━━━━━━━━━━━━━\n"
+    text += "Made by @Xyz_Zico\n"
+    text += "Powered By ROH-X."
+    return text
+
+# Main webhook endpoint
+@app.route("/", methods=["POST"])
+def webhook():
+    init_db()
+    update = request.get_json()
+    
+    if "message" in update:
+        message = update["message"]
+        chat_id = message["chat"]["id"]
+        user_id = message["from"]["id"]
+        text = message.get("text", "")
         
-        time.sleep(0.5)
-        bot.delete_message(call.message.chat.id, msg.message_id)
-        final_msg = (
-            "VERIFICATION SUCCESSFUL! 🎉\n\n"
-            "WELCOME ❤️ HOSTING BOT 24/7 ACTIVE ✅\n\n"
-            "Ab aap niche diye gaye permanent buttons se apne bots manage kar sakte hain:"
-        )
-        bot.send_message(call.message.chat.id, final_msg, reply_markup=get_permanent_menu())
-    else:
-        bot.answer_callback_query(call.id, "Aapne abhi tak dono channels join nahi kiye hain!", show_alert=True)
-
-@bot.message_handler(func=lambda message: True)
-def handle_text_menu(message):
-    user_id = message.from_user.id
-    text = message.text
-
-    if not is_user_joined(user_id):
-        bot.reply_to(message, "PLEASE CHANNEL JOIN 🤨 START BOT ❤️‍🩹", reply_markup=get_join_keyboard())
-        return
-
-    if text == "📥 Upload File":
-        bot.reply_to(message, "Ab apni .py (Python) file direct chat me send karo, wo admin approval ke liye chali jayegi!")
-
-    elif text == "📦 PIP Upload":
-        bot.reply_to(message, "Ab apni `requirements.txt` file send karo taaki required modules install kiye ja sakein (Yeh bhi admin approval ke baad apply hoga)!")
-
-    elif text == "📁 My Bots":
-        dead_keys = []
-        for k, p in running_processes.items():
-            if k.startswith(f"{user_id}_") and p.poll() is not None:
-                dead_keys.append(k)
-        for dk in dead_keys:
-            del running_processes[dk]
-
-        user_active = [k.split('_', 1)[1] for k in running_processes.keys() if k.startswith(f"{user_id}_")]
-        if user_active:
-            resp = "AAPKE ACTIVE LIVE BOTS:\n\n" + "\n".join([f"• {fn}" for fn in user_active])
-        else:
-            resp = "Aapka koi bhi bot abhi live nahi chal raha hai."
-        bot.reply_to(message, resp)
-
-    elif text == "📊 My Files":
-        user_folder = os.path.join(HOST_DIR, str(user_id))
-        if os.path.exists(user_folder):
-            files = os.listdir(user_folder)
-            if files:
-                resp = "AAPKI HOSTED FILES:\n\n" + "\n".join([f"• {f}" for f in files])
+        # Register user
+        db = init_db()
+        if user_id not in db["users"]:
+            db["users"].append(user_id)
+            save_db(db)
+            
+        # Check if user is banned
+        if is_banned(user_id):
+            send_message(chat_id, "🚫 You are banned from using this bot.\nContact: @Xyz_Zico")
+            return jsonify({"status": "ok"})
+            
+        # Check channel membership
+        if db["settings"]["require_join"] and not check_channel_membership(chat_id, user_id):
+            keyboard = {
+                "inline_keyboard": [
+                    [{"text": "📢 Join Channel", "url": CHANNEL_LINK}],
+                    [{"text": "✅ Joined", "callback_data": "check_join"}]
+                ]
+            }
+            send_message(chat_id, f"🔒 *Please join our channel to use this bot!*\n\nChannel: {CHANNEL_LINK}", keyboard)
+            return jsonify({"status": "ok"})
+            
+        # Handle commands
+        if text == "/start":
+            send_message(chat_id, get_welcome_message(), get_main_keyboard())
+        elif text == "/admin" and is_admin(user_id):
+            send_message(chat_id, "🔐 *Admin Panel*\n━━━━━━━━━━━━━━━━━━━━\n\nWelcome Admin! Use the buttons below to manage the bot.", get_admin_keyboard())
+        elif "reply_to_message" in message:
+            reply_text = message["reply_to_message"].get("text", "")
+            if is_admin(user_id) and "Broadcast Mode" in reply_text:
+                success, failed = 0, 0
+                for user in db["users"]:
+                    if send_message(user, text):
+                        success += 1
+                    else:
+                        failed += 1
+                send_message(chat_id, f"📢 *Broadcast Complete*\n✅ Success: {success}\n❌ Failed: {failed}")
+            elif "Send Input" in reply_text:
+                lookup_type = "phone"
+                if "Vehicle" in reply_text: lookup_type = "vehicle"
+                elif "Aadhaar" in reply_text: lookup_type = "aadhaar"
+                elif "Pincode" in reply_text: lookup_type = "pincode"
+                elif "GST" in reply_text: lookup_type = "gst"
+                elif "UPI" in reply_text: lookup_type = "upi"
+                elif "IFSC" in reply_text: lookup_type = "ifsc"
+                elif "Pan" in reply_text: lookup_type = "pan"
+                elif "IP" in reply_text: lookup_type = "ip"
+                elif "Weather" in reply_text: lookup_type = "weather"
+                elif "Instagram" in reply_text: lookup_type = "instagram"
+                elif "TG" in reply_text: lookup_type = "tg"
+                elif "Email" in reply_text: lookup_type = "email"
+                elif "IMEI" in reply_text: lookup_type = "imei"
+                elif "RASHAN" in reply_text: lookup_type = "rashan"
+                elif "Family" in reply_text: lookup_type = "family"
+                
+                result = perform_lookup(lookup_type, text)
+                send_message(chat_id, result)
+                
+    elif "callback_query" in update:
+        callback = update["callback_query"]
+        chat_id = callback["message"]["chat"]["id"]
+        user_id = callback["from"]["id"]
+        message_id = callback["message"]["message_id"]
+        data = callback["data"]
+        
+        if is_banned(user_id):
+            send_message(chat_id, "🚫 You are banned from using this bot.\nContact: @Xyz_Zico")
+            return jsonify({"status": "ok"})
+            
+        db = init_db()
+        if db["settings"]["require_join"] and not check_channel_membership(chat_id, user_id) and data != "check_join":
+            keyboard = {
+                "inline_keyboard": [
+                    [{"text": "📢 Join Channel", "url": CHANNEL_LINK}],
+                    [{"text": "✅ Joined", "callback_data": "check_join"}]
+                ]
+            }
+            edit_message(chat_id, message_id, f"🔒 *Please join our channel to use this bot!*\n\nChannel: {CHANNEL_LINK}", keyboard)
+            return jsonify({"status": "ok"})
+            
+        if data.startswith("lookup_"):
+            lookup_type = data.replace("lookup_", "")
+            example_msg = get_example_message(lookup_type)
+            keyboard = {"inline_keyboard": [[{"text": "◀️ Back", "callback_data": "back_to_main"}]]}
+            edit_message(chat_id, message_id, example_msg, keyboard)
+            
+        elif data == "help":
+            help_text = "❓ *Help & Support*\n━━━━━━━━━━━━━━━━━━━━\n\n"
+            help_text += "📌 *How to Use:*\n1️⃣ Select any lookup option from the menu\n2️⃣ Send the required information\n3️⃣ Get instant results!\n\n"
+            help_text += f"📞 *Support:* @Xyz_Zico\n📢 *Channel:* {CHANNEL_LINK}\n\n━━━━━━━━━━━━━━━━━━━━\nMade by @Xyz_Zico\nPowered By ROH-X"
+            edit_message(chat_id, message_id, help_text, get_main_keyboard())
+            
+        elif data == "stats":
+            total_users = len(db["users"])
+            banned_users = len(db["banned"])
+            active_users = total_users - banned_users
+            stats_text = f"📊 *Bot Statistics*\n━━━━━━━━━━━━━━━━━━━━\n\n👥 Total Users: `{total_users}`\n✅ Active Users: `{active_users}`\n🚫 Banned Users: `{banned_users}`\n👑 Owner: @Xyz_Zico\n\n━━━━━━━━━━━━━━━━━━━━\nMade by @REDX64\nPowered By ROH-X"
+            edit_message(chat_id, message_id, stats_text, get_main_keyboard())
+            
+        elif data == "back_to_main":
+            edit_message(chat_id, message_id, get_welcome_message(), get_main_keyboard())
+            
+        elif data == "check_join":
+            if check_channel_membership(chat_id, user_id):
+                edit_message(chat_id, message_id, get_welcome_message(), get_main_keyboard())
             else:
-                resp = "Aapne abhi koi file upload nahi ki hai."
-        else:
-            resp = "Aapka folder khali hai."
-        bot.reply_to(message, resp)
-
-    elif text == "📜 My History":
-        hist = user_history.get(user_id, [])
-        if hist:
-            resp = "AAPKI HOSTING HISTORY:\n\n" + "\n".join([f"• {h}" for h in hist])
-        else:
-            resp = "Koi history nahi mili."
-        bot.reply_to(message, resp)
-
-    elif text == "🗑️ Delete Bot":
-        user_active = [k.split('_', 1)[1] for k in running_processes.keys() if k.startswith(f"{user_id}_")]
-        if user_active:
-            markup = InlineKeyboardMarkup()
-            for fn in user_active:
-                markup.add(InlineKeyboardButton(f"❌ Stop & Delete {fn}", callback_data=f"del_{fn}"))
-            bot.reply_to(message, "Jis bot ko delete/stop karna hai uspar click karein:", reply_markup=markup)
-        else:
-            bot.reply_to(message, "Delete karne ke liye koi active bot nahi hai.")
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith("del_"))
-def handle_delete_callback(call):
-    user_id = call.from_user.id
-    file_name = call.data.replace("del_", "")
-    process_key = f"{user_id}_{file_name}"
-    if process_key in running_processes:
+                keyboard = {
+                    "inline_keyboard": [
+                        [{"text": "📢 Join Channel", "url": CHANNEL_LINK}],
+                        [{"text": "✅ Joined", "callback_data": "check_join"}]
+                    ]
+                }
+                edit_message(chat_id, message_id, "❌ *You haven't joined the channel yet!*\n\nPlease join and click 'Joined' button.", keyboard)
+                
+        elif data.startswith("admin_") and is_admin(user_id):
+            action = data.replace("admin_", "")
+            if action == "users":
+                users_list = "👥 *All Users*\n━━━━━━━━━━━━━━━━━━━━\n\n"
+                for index, user in enumerate(db["users"][:50]):
+                    status = "🚫 Banned" if user in db["banned"] else "✅ Active"
+                    users_list += f"`{index + 1}.` User ID: `{user}` - {status}\n"
+                users_list += f"\n━━━━━━━━━━━━━━━━━━━━\nTotal: {len(db['users'])} users"
+                send_message(chat_id, users_list)
+                
+        # Answer callback query
         try:
-            running_processes[process_key].terminate()
-            del running_processes[process_key]
-            bot.answer_callback_query(call.id, f"{file_name} ko delete aur stop kar diya gaya hai!", show_alert=True)
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"{file_name} successfully stop aur delete ho gaya hai.")
-        except Exception as e:
-            bot.answer_callback_query(call.id, f"Error: {e}", show_alert=True)
-    else:
-        bot.answer_callback_query(call.id, "File nahi mili ya pehle se band hai.", show_alert=True)
-
-# User uploads document (.py or requirements.txt) -> Sends to Admin for approval
-@bot.message_handler(content_types=['document'])
-def handle_document(message):
-    user_id = message.from_user.id
-    if not is_user_joined(user_id):
-        ask_join_text = (
-            "WELCOME ❤️ HOSTING BOT 24/7 ACTIVE ✅\n\n"
-            "PLEASE CHANNEL JOIN 🤨 START BOT ❤️‍🩹"
-        )
-        bot.reply_to(message, ask_join_text, reply_markup=get_join_keyboard())
-        return
-
-    file_name = message.document.file_name
-    if not (file_name.endswith('.py') or file_name == 'requirements.txt'):
-        bot.reply_to(message, "Sirf .py (Python) files ya requirements.txt allowed hain!")
-        return
-
-    try:
-        file_info = bot.get_file(message.document.file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
-
-        pending_user_dir = os.path.join(PENDING_DIR, str(user_id))
-        os.makedirs(pending_user_dir, exist_ok=True)
-        pending_path = os.path.join(pending_user_dir, file_name)
-
-        with open(pending_path, 'wb') as f:
-            f.write(downloaded_file)
-
-        # Send approval request to Admin
-        admin_markup = InlineKeyboardMarkup()
-        admin_markup.add(
-            InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user_id}_{file_name}"),
-            InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}_{file_name}")
-        )
-
-        file_type_label = "PYTHON BOT FILE" if file_name.endswith('.py') else "PIP REQUIREMENTS FILE"
-        caption = (
-            f"📥 **NEW {file_type_label} APPROVAL REQUEST**\n\n"
-            f"👤 **User ID:** `{user_id}`\n"
-            f"📁 **File Name:** `{file_name}`\n\n"
-            f"Neeche diye gaye button se Approve ya Reject karein:"
-        )
-
-        bot.send_document(
-            ADMIN_ID,
-            message.document.file_id,
-            caption=caption,
-            parse_mode="Markdown",
-            reply_markup=admin_markup
-        )
-
-        bot.reply_to(message, f"⚡ Aapki `{file_name}` file Admin ke paas approval ke liye bhej di gayi hai!")
-
-    except Exception as e:
-        bot.reply_to(message, f"Error sending file for approval: {str(e)}")
-
-# Admin Approval / Rejection Handler
-@bot.callback_query_handler(func=lambda call: call.data.startswith(("approve_", "reject_")))
-def handle_admin_approval(call):
-    if call.from_user.id != ADMIN_ID:
-        bot.answer_callback_query(call.id, "Aap admin nahi hain!", show_alert=True)
-        return
-
-    data = call.data
-    action, rest = data.split("_", 1)
-    parts = rest.split("_", 1)
-    target_user_id = int(parts[0])
-    file_name = parts[1]
-
-    pending_path = os.path.join(PENDING_DIR, str(target_user_id), file_name)
-
-    if action == "approve":
-        if not os.path.exists(pending_path):
-            bot.answer_callback_query(call.id, "File pending folder me nahi mili!", show_alert=True)
-            return
-
-        user_folder = os.path.join(HOST_DIR, str(target_user_id))
-        os.makedirs(user_folder, exist_ok=True)
-        target_path = os.path.join(user_folder, file_name)
-
-        os.rename(pending_path, target_path)
-
-        if file_name == "requirements.txt":
-            # Install requirements via pip
-            try:
-                subprocess.run(["pip", "install", "-r", target_path], check=True)
-                bot.answer_callback_query(call.id, "Requirements installed successfully!", show_alert=True)
-            except Exception as e:
-                bot.answer_callback_query(call.id, f"Pip install error: {e}", show_alert=True)
-        else:
-            # Run Python bot file
-            process_key = f"{target_user_id}_{file_name}"
-            if process_key in running_processes:
-                try:
-                    running_processes[process_key].terminate()
-                except:
-                    pass
-
-            process = subprocess.Popen(["python3", target_path])
-            running_processes[process_key] = process
-
-            if target_user_id not in user_history:
-                user_history[target_user_id] = []
-            user_history[target_user_id].append(f"Hosted: {file_name} at {time.strftime('%Y-%m-%d %H:%M:%S')}")
-
-            bot.answer_callback_query(call.id, "File Approved & Deployed Successfully!", show_alert=True)
-
-        bot.edit_message_caption(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            caption=f"✅ **APPROVED & PROCESSED**\n\nUser ID: `{target_user_id}`\nFile: `{file_name}`",
-            parse_mode="Markdown"
-        )
-
-        try:
-            bot.send_message(
-                target_user_id,
-                f"🎉 **Aapki File Admin Dwara Approve Ho Gayi Hai!**\n\n📁 File: `{file_name}`\n🚀 Status: Processed Successfully",
-                parse_mode="Markdown"
-            )
-        except Exception as e:
-            print(f"Failed to notify user: {e}")
-
-    elif action == "reject":
-        if os.path.exists(pending_path):
-            os.remove(pending_path)
-
-        bot.answer_callback_query(call.id, "File Rejected!", show_alert=True)
-        bot.edit_message_caption(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            caption=f"❌ **REJECTED**\n\nUser ID: `{target_user_id}`\nFile: `{file_name}`",
-            parse_mode="Markdown"
-        )
-
-        try:
-            bot.send_message(
-                target_user_id,
-                f"❌ **Aapki File Admin Dwara Reject Kar Di Gayi Hai.**\n\n📁 File: `{file_name}`",
-                parse_mode="Markdown"
-            )
-        except Exception as e:
-            print(f"Failed to notify user: {e}")
-
-print("Bot PIP Upload aur Admin Approval ke sath live ho gaya hai...")
-bot.infinity_polling()
+            requests.get(f"{API_URL}answerCallbackQuery?callback_query_id={callback['id']}")
+        except Exception:
+            pass
         
+    return jsonify({"status": "ok"})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+                
