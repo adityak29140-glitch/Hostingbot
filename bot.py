@@ -7,11 +7,11 @@ app = Flask(__name__)
 
 # Bot Configuration
 BOT_TOKEN = "8963703963:AAF-2e5poOVF7oqNPhg70oF7NL7Cv0BGdfE"
-API_URL = f"https://api.telegram.org/BOT TOKEN/"
-OWNER_ID = 8903693040
-ADMIN_ID  = [8903693040]
-CHANNEL_LINK = "https://t.me/+Mi0ELzGRzChmOTBl"
-CHANNEL_USERNAME = "PRIVATE HACK FREE😁"
+API_URL = "https://api.telegram.org/bot" + BOT_TOKEN + "/"
+OWNER_ID = 8235337601
+ADMIN_IDS = [8235337601]
+CHANNEL_LINK = "https://t.me/All_channel_links_please_join"
+CHANNEL_USERNAME = "All_channel_links_please_join"
 
 # Database configuration
 DB_FILE = "bot_database.json"
@@ -21,7 +21,7 @@ def init_db():
     if not os.path.exists(DB_FILE):
         default_data = {
             "users": [],
-            "admins": [8903693040],
+            "admins": [8235337601],
             "banned": [],
             "settings": {
                 "require_join": True
@@ -390,4 +390,4 @@ def webhook():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-                
+    
