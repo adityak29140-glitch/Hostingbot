@@ -1,11 +1,10 @@
-
 import os
 import subprocess
 import time
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
-TOKEN = "8998795222:AAGI_enlw97EfIjt_ntxcBvCj6VFDT1l30g"
+TOKEN = "8998795222:AAF_TUI7vT4dSHp28gjUQoTxDwTeH4SMjD4"
 ADMIN_ID = 8903693040
 bot = telebot.TeleBot(TOKEN)
 
@@ -40,17 +39,12 @@ def get_join_keyboard():
     markup.add(InlineKeyboardButton("✅ VERIFY NOW", callback_data="check_join"))
     return markup
 
-def get_main_menu():
-    markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("📥 Upload File", callback_data="menu_upload"))
-    markup.add(
-        InlineKeyboardButton("📁 My Bots", callback_data="menu_mybot"),
-        InlineKeyboardButton("📊 My Files", callback_data="menu_myfile")
-    )
-    markup.add(
-        InlineKeyboardButton("📜 My History", callback_data="menu_history"),
-        InlineKeyboardButton("🗑️ Delete Bot", callback_data="menu_delete")
-    )
+# Permanent Bottom Reply Keyboard
+def get_permanent_menu():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row(KeyboardButton("📥 Upload File"))
+    markup.row(KeyboardButton("📁 My Bots"), KeyboardButton("📊 My Files"))
+    markup.row(KeyboardButton("📜 My History"), KeyboardButton("🗑️ Delete Bot"))
     return markup
 
 @bot.message_handler(commands=['start'])
@@ -60,9 +54,9 @@ def send_welcome(message):
         welcome_msg = (
             "WELCOME ❤️ HOSTING BOT 24/7 ACTIVE ✅\n\n"
             "Aapka verification successful ho gaya hai!\n"
-            "Neeche diye gaye options me se select karein:"
+            "Neeche permanent menu se option select karein:"
         )
-        bot.reply_to(message, welcome_msg, reply_markup=get_main_menu())
+        bot.reply_to(message, welcome_msg, reply_markup=get_permanent_menu())
     else:
         ask_join_text = (
             "WELCOME ❤️ HOSTING BOT 24/7 ACTIVE ✅\n\n"
@@ -71,106 +65,102 @@ def send_welcome(message):
         )
         bot.reply_to(message, ask_join_text, reply_markup=get_join_keyboard())
 
-@bot.callback_query_handler(func=lambda call: True)
-def handle_callbacks(call):
+@bot.callback_query_handler(func=lambda call: call.data == "check_join")
+def handle_verification(call):
     user_id = call.from_user.id
-    data = call.data
-
-    if data == "check_join":
-        if is_user_joined(user_id):
-            msg = bot.edit_message_text(
-                chat_id=call.message.chat.id,
-                message_id=call.message.message_id,
-                text="VERIFICATION STARTED...\n[▒▒▒▒▒▒▒▒▒▒] 0%"
-            )
-            for i in range(20, 101, 20):
-                time.sleep(0.3)
-                filled = '█' * (i // 10)
-                empty = '▒' * (10 - (i // 10))
-                bot.edit_message_text(
-                    chat_id=call.message.chat.id,
-                    message_id=msg.message_id,
-                    text=f"CHECKING MEMBERSHIP & SECURITY...\n[{filled}{empty}] {i}%"
-                )
-            
-            time.sleep(0.5)
-            final_msg = (
-                "VERIFICATION SUCCESSFUL! 🎉\n\n"
-                "WELCOME ❤️ HOSTING BOT 24/7 ACTIVE ✅\n\n"
-                "Ab aap apne bots manage kar sakte hain:"
-            )
+    if is_user_joined(user_id):
+        msg = bot.edit_message_text(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            text="VERIFICATION STARTED...\n[▒▒▒▒▒▒▒▒▒▒] 0%"
+        )
+        for i in range(20, 101, 20):
+            time.sleep(0.3)
+            filled = '█' * (i // 10)
+            empty = '▒' * (10 - (i // 10))
             bot.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=msg.message_id,
-                text=final_msg,
-                reply_markup=get_main_menu()
+                text=f"CHECKING MEMBERSHIP & SECURITY...\n[{filled}{empty}] {i}%"
             )
-        else:
-            bot.answer_callback_query(call.id, "Aapne abhi tak dono channels join nahi kiye hain!", show_alert=True)
+        
+        time.sleep(0.5)
+        bot.delete_message(call.message.chat.id, msg.message_id)
+        final_msg = (
+            "VERIFICATION SUCCESSFUL! 🎉\n\n"
+            "WELCOME ❤️ HOSTING BOT 24/7 ACTIVE ✅\n\n"
+            "Ab aap niche diye gaye permanent buttons se apne bots manage kar sakte hain:"
+        )
+        bot.send_message(call.message.chat.id, final_msg, reply_markup=get_permanent_menu())
+    else:
+        bot.answer_callback_query(call.id, "Aapne abhi tak dono channels join nahi kiye hain!", show_alert=True)
 
-    elif data == "menu_upload":
-        bot.answer_callback_query(call.id)
-        bot.send_message(call.message.chat.id, "Ab apni .py (Python) file direct chat me send karo, main usko automatically host kar dunga!")
+# Handling Permanent Keyboard Button Texts
+@bot.message_handler(func=lambda message: True)
+def handle_text_menu(message):
+    user_id = message.from_user.id
+    text = message.text
 
-    elif data == "menu_mybot":
-        bot.answer_callback_query(call.id)
+    if not is_user_joined(user_id):
+        bot.reply_to(message, "PLEASE CHANNEL JOIN 🤨 START BOT ❤️‍🩹", reply_markup=get_join_keyboard())
+        return
+
+    if text == "📥 Upload File":
+        bot.reply_to(message, "Ab apni .py (Python) file direct chat me send karo, main usko automatically host kar dunga!")
+
+    elif text == "📁 My Bots":
         user_active = [k.split('_', 1)[1] for k in running_processes.keys() if k.startswith(f"{user_id}_")]
         if user_active:
-            text = "AAPKE ACTIVE LIVE BOTS:\n\n"
-            for fn in user_active:
-                text += f"• {fn}\n"
+            resp = "AAPKE ACTIVE LIVE BOTS:\n\n" + "\n".join([f"• {fn}" for fn in user_active])
         else:
-            text = "Aapka koi bhi bot abhi live nahi chal raha hai."
-        bot.send_message(call.message.chat.id, text)
+            resp = "Aapka koi bhi bot abhi live nahi chal raha hai."
+        bot.reply_to(message, resp)
 
-    elif data == "menu_myfile":
-        bot.answer_callback_query(call.id)
+    elif text == "📊 My Files":
         user_folder = os.path.join(HOST_DIR, str(user_id))
         if os.path.exists(user_folder):
             files = os.listdir(user_folder)
             if files:
-                text = "AAPKI HOSTED FILES:\n\n"
-                for f in files:
-                    text += f"• {f}\n"
+                resp = "AAPKI HOSTED FILES:\n\n" + "\n".join([f"• {f}" for f in files])
             else:
-                text = "Aapne abhi koi file upload nahi ki hai."
+                resp = "Aapne abhi koi file upload nahi ki hai."
         else:
-            text = "Aapka folder khali hai."
-        bot.send_message(call.message.chat.id, text)
+            resp = "Aapka folder khali hai."
+        bot.reply_to(message, resp)
 
-    elif data == "menu_history":
-        bot.answer_callback_query(call.id)
+    elif text == "📜 My History":
         hist = user_history.get(user_id, [])
         if hist:
-            text = "AAPKI HOSTING HISTORY:\n\n" + "\n".join([f"• {h}" for h in hist])
+            resp = "AAPKI HOSTING HISTORY:\n\n" + "\n".join([f"• {h}" for h in hist])
         else:
-            text = "Koi history nahi mili."
-        bot.send_message(call.message.chat.id, text)
+            resp = "Koi history nahi mili."
+        bot.reply_to(message, resp)
 
-    elif data == "menu_delete":
-        bot.answer_callback_query(call.id)
+    elif text == "🗑️ Delete Bot":
         user_active = [k.split('_', 1)[1] for k in running_processes.keys() if k.startswith(f"{user_id}_")]
         if user_active:
             markup = InlineKeyboardMarkup()
             for fn in user_active:
                 markup.add(InlineKeyboardButton(f"❌ Stop & Delete {fn}", callback_data=f"del_{fn}"))
-            bot.send_message(call.message.chat.id, "Jis bot ko delete/stop karna hai uspar click karein:", reply_markup=markup)
+            bot.reply_to(message, "Jis bot ko delete/stop karna hai uspar click karein:", reply_markup=markup)
         else:
-            bot.send_message(call.message.chat.id, "Delete karne ke liye koi active bot nahi hai.")
+            bot.reply_to(message, "Delete karne ke liye koi active bot nahi hai.")
 
-    elif data.startswith("del_"):
-        file_name = data.replace("del_", "")
-        process_key = f"{user_id}_{file_name}"
-        if process_key in running_processes:
-            try:
-                running_processes[process_key].terminate()
-                del running_processes[process_key]
-                bot.answer_callback_query(call.id, f"{file_name} ko delete aur stop kar diya gaya hai!", show_alert=True)
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"{file_name} successfully stop aur delete ho gaya hai.")
-            except Exception as e:
-                bot.answer_callback_query(call.id, f"Error: {e}", show_alert=True)
-        else:
-            bot.answer_callback_query(call.id, "File nahi mili ya pehle se band hai.", show_alert=True)
+@bot.callback_query_handler(func=lambda call: call.data.startswith("del_"))
+def handle_delete_callback(call):
+    user_id = call.from_user.id
+    file_name = call.data.replace("del_", "")
+    process_key = f"{user_id}_{file_name}"
+    if process_key in running_processes:
+        try:
+            running_processes[process_key].terminate()
+            del running_processes[process_key]
+            bot.answer_callback_query(call.id, f"{file_name} ko delete aur stop kar diya gaya hai!", show_alert=True)
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"{file_name} successfully stop aur delete ho gaya hai.")
+        except Exception as e:
+            bot.answer_callback_query(call.id, f"Error: {e}", show_alert=True)
+    else:
+        bot.answer_callback_query(call.id, "File nahi mili ya pehle se band hai.", show_alert=True)
 
 @bot.message_handler(content_types=['document'])
 def handle_document(message):
@@ -234,12 +224,11 @@ def handle_document(message):
         bot.edit_message_text(
             success_text,
             chat_id=message.chat.id,
-            message_id=msg.message_id,
-            reply_markup=get_main_menu()
+            message_id=msg.message_id
         )
 
     except Exception as e:
         bot.edit_message_text(f"Hosting Error: {str(e)}", chat_id=message.chat.id, message_id=msg.message_id)
 
-print("Bot Admin ID Aur Hacker Animation Ke Saath Live Ho Gaya Hai...")
+print("Bot New Token Aur Permanent Keyboard Ke Saath Live Ho Gaya Hai...")
 bot.infinity_polling()
