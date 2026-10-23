@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Bot Configuration
 BOT_TOKEN = "8963703963:AAF-2e5poOVF7oqNPhg70oF7NL7Cv0BGdfE"
-API_URL = f"https://api.telegram.org/bot{8963703963:AAF-2e5poOVF7oqNPhg70oF7NL7Cv0BGdfE}/"
+API_URL = f"https://api.telegram.org/BOT TOKEN/"
 OWNER_ID = 8903693040
 ADMIN_ID  = [8903693040]
 CHANNEL_LINK = "https://t.me/+Mi0ELzGRzChmOTBl"
