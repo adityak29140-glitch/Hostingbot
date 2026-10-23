@@ -109,11 +109,19 @@ def handle_text_menu(message):
         bot.reply_to(message, "Ab apni .py (Python) file direct chat me send karo, main usko automatically host kar dunga!")
 
     elif text == "📁 My Bots":
+        # Check active processes and clean up dead ones
+        dead_keys = []
+        for k, p in running_processes.items():
+            if k.startswith(f"{user_id}_") and p.poll() is not None:
+                dead_keys.append(k)
+        for dk in dead_keys:
+            del running_processes[dk]
+
         user_active = [k.split('_', 1)[1] for k in running_processes.keys() if k.startswith(f"{user_id}_")]
         if user_active:
             resp = "AAPKE ACTIVE LIVE BOTS:\n\n" + "\n".join([f"• {fn}" for fn in user_active])
         else:
-            resp = "Aapka koi bhi bot abhi live nahi chal raha hai."
+            resp = "Aapka koi bhi bot abhi live nahi chal raha hai (ya crash ho gaya hai)."
         bot.reply_to(message, resp)
 
     elif text == "📊 My Files":
@@ -209,8 +217,23 @@ def handle_document(message):
             except:
                 pass
 
-        process = subprocess.Popen(["python3", file_path])
+        # Run process and capture errors if it crashes immediately
+        process = subprocess.Popen(["python3", file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         running_processes[process_key] = process
+
+        # Wait 2 seconds to check if script crashed instantly
+        time.sleep(2)
+        if process.poll() is not None:
+            # Script crashed! Read error message
+            out, err = process.communicate()
+            err_text = err.decode('utf-8', errors='ignore')[:300] # trim error
+            bot.edit_message_text(
+                f"❌ **Hosting Failed! Script Crashed:**\n\n`{err_text}`",
+                chat_id=message.chat.id,
+                message_id=msg.message_id,
+                parse_mode="Markdown"
+            )
+            return
 
         if user_id not in user_history:
             user_history[user_id] = []
@@ -230,5 +253,6 @@ def handle_document(message):
     except Exception as e:
         bot.edit_message_text(f"Hosting Error: {str(e)}", chat_id=message.chat.id, message_id=msg.message_id)
 
-print("Bot New Token Aur Permanent Keyboard Ke Saath Live Ho Gaya Hai...")
+print("Bot Robust Error Detection Ke Saath Live Ho Gaya Hai...")
 bot.infinity_polling()
+                                 
