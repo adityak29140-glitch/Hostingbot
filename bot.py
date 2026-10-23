@@ -4,8 +4,8 @@ import time
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# Aapka Bot Token
-TOKEN = "8998795222:AAEAUpj2efPF0n0x1KaBamzb_cZ5Ge47RT4"
+# Aapka Naya Bot Token
+TOKEN = "8998795222:AAGI_enlw97EfIjt_ntxcBvCj6VFDT1l30g"
 bot = telebot.TeleBot(TOKEN)
 
 # Channels Config
@@ -33,27 +33,27 @@ def is_user_joined(user_id):
         print(f"Check Error: {e}")
         return False
 
-# Join Markup
+# Join Markup (Bold Buttons)
 def get_join_keyboard():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("📢 Join Channel 1", url=CHANNEL_1_LINK))
-    markup.add(InlineKeyboardButton("📢 Join Channel 2", url=CHANNEL_2_LINK))
-    markup.add(InlineKeyboardButton("VERIFY ✅", callback_data="check_join"))
+    markup.add(InlineKeyboardButton("📢 **JOIN CHANNEL 1**", url=CHANNEL_1_LINK))
+    markup.add(InlineKeyboardButton("📢 **JOIN CHANNEL 2**", url=CHANNEL_2_LINK))
+    markup.add(InlineKeyboardButton("✅ **VERIFY NOW**", callback_data="check_join"))
     return markup
 
-# Main Menu Buttons
+# Main Menu Buttons (Bold & Stylish)
 def get_main_menu():
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
-        InlineKeyboardButton("📤 Upload File", callback_data="menu_upload"),
-        InlineKeyboardButton("🤖 My Bot", callback_data="menu_mybot")
+        InlineKeyboardButton("📤 **UPLOAD FILE**", callback_data="menu_upload"),
+        InlineKeyboardButton("🤖 **MY BOT**", callback_data="menu_mybot")
     )
     markup.add(
-        InlineKeyboardButton("📁 My File", callback_data="menu_myfile"),
-        InlineKeyboardButton("📜 My History", callback_data="menu_history")
+        InlineKeyboardButton("📁 **MY FILE**", callback_data="menu_myfile"),
+        InlineKeyboardButton("📜 **MY HISTORY**", callback_data="menu_history")
     )
     markup.add(
-        InlineKeyboardButton("🗑️ Delete Bot", callback_data="menu_delete")
+        InlineKeyboardButton("🗑️ **DELETE BOT**", callback_data="menu_delete")
     )
     return markup
 
@@ -62,16 +62,21 @@ def get_main_menu():
 def send_welcome(message):
     user_id = message.from_user.id
     if is_user_joined(user_id):
-        bot.reply_to(message, "WELCOME ❤️ HOSTING BOT 24/7 ⏳ACTIVE ✅\n\nNeeche diye gaye options me se select karein:", reply_markup=get_main_menu())
+        welcome_msg = (
+            "🔥 **WELCOME ❤️ HOSTING BOT 24/7 ⏳ ACTIVE ✅**\n\n"
+            "⚡ **Aapka verification successful ho gaya hai!**\n"
+            "👇 **Neeche diye gaye options me se select karein:**"
+        )
+        bot.reply_to(message, welcome_msg, reply_markup=get_main_menu(), parse_mode="Markdown")
     else:
         ask_join_text = (
-            "WELCOME ❤️ HOSTING BOT 24/7 ⏳ACTIVE ✅\n"
-            "PLEASE CHANNEL JOIN 🤨 START BOT❤️‍🩹\n\n"
-            "Pehle dono channels join karein aur phir 'VERIFY ✅' par click karein!"
+            "🚨 **WELCOME ❤️ HOSTING BOT 24/7 ⏳ ACTIVE ✅**\n\n"
+            "⚠️ **PLEASE CHANNEL JOIN 🤨 START BOT ❤️‍🩹**\n\n"
+            "👉 **Pehle dono channels join karein aur phir 'VERIFY NOW' par click karein!**"
         )
-        bot.reply_to(message, ask_join_text, reply_markup=get_join_keyboard())
+        bot.reply_to(message, ask_join_text, reply_markup=get_join_keyboard(), parse_mode="Markdown")
 
-# Callback Query Handler (Verification & Menu Actions)
+# Callback Query Handler
 @bot.callback_query_handler(func=lambda call: True)
 def handle_callbacks(call):
     user_id = call.from_user.id
@@ -79,11 +84,11 @@ def handle_callbacks(call):
 
     if data == "check_join":
         if is_user_joined(user_id):
-            # Hacker style 1 to 100 loading animation
+            # Hacker style 1 to 100 loading animation with Bold
             msg = bot.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
-                text="⚡ **Verification Started...**\n`[▒▒▒▒▒▒▒▒▒▒] 0%`",
+                text="⚡ **VERIFICATION STARTED...**\n`[▒▒▒▒▒▒▒▒▒▒] 0%`",
                 parse_mode="Markdown"
             )
             for i in range(20, 101, 20):
@@ -93,15 +98,20 @@ def handle_callbacks(call):
                 bot.edit_message_text(
                     chat_id=call.message.chat.id,
                     message_id=msg.message_id,
-                    text=f"⚡ **Checking Membership & Security...**\n`[{filled}{empty}] {i}%`",
+                    text=f"⚡ **CHECKING MEMBERSHIP & SECURITY...**\n`[{filled}{empty}] {i}%`",
                     parse_mode="Markdown"
                 )
             
             time.sleep(0.5)
+            final_msg = (
+                "✅ **VERIFICATION SUCCESSFUL!** 🎉\n\n"
+                "🔥 **WELCOME ❤️ HOSTING BOT 24/7 ⏳ ACTIVE ✅**\n\n"
+                "👇 **Ab aap apne bots manage kar sakte hain:**"
+            )
             bot.edit_message_text(
                 chat_id=call.message.chat.id,
                 message_id=msg.message_id,
-                text="✅ **Verification Successful!** 🎉\n\nWELCOME ❤️ HOSTING BOT 24/7 ⏳ACTIVE ✅",
+                text=final_msg,
                 reply_markup=get_main_menu(),
                 parse_mode="Markdown"
             )
@@ -110,17 +120,17 @@ def handle_callbacks(call):
 
     elif data == "menu_upload":
         bot.answer_callback_query(call.id)
-        bot.send_message(call.message.chat.id, "📤 Ab apni `.py` (Python) file direct chat me send karo, main usko automatically host kar dunga!")
+        bot.send_message(call.message.chat.id, "📤 **Ab apni `.py` (Python) file direct chat me send karo, main usko automatically host kar dunga!**", parse_mode="Markdown")
 
     elif data == "menu_mybot":
         bot.answer_callback_query(call.id)
         user_active = [k.split('_', 1)[1] for k in running_processes.keys() if k.startswith(f"{user_id}_")]
         if user_active:
-            text = "🤖 **Aapke Active Live Bots:**\n\n"
+            text = "🤖 **AAPKE ACTIVE LIVE BOTS:**\n\n"
             for fn in user_active:
-                text += f"• `{fn}`\n"
+                text += f"• **`{fn}`**\n"
         else:
-            text = "🔴 Aapka koi bhi bot abhi live nahi chal raha hai."
+            text = "🔴 **Aapka koi bhi bot abhi live nahi chal raha hai.**"
         bot.send_message(call.message.chat.id, text, parse_mode="Markdown")
 
     elif data == "menu_myfile":
@@ -129,22 +139,22 @@ def handle_callbacks(call):
         if os.path.exists(user_folder):
             files = os.listdir(user_folder)
             if files:
-                text = "📁 **Aapki Hosted Files:**\n\n"
+                text = "📁 **AAPKI HOSTED FILES:**\n\n"
                 for f in files:
-                    text += f"• `{f}`\n"
+                    text += f"• **`{f}`**\n"
             else:
-                text = "📁 Aapne abhi koi file upload nahi ki hai."
+                text = "📁 **Aapne abhi koi file upload nahi ki hai.**"
         else:
-            text = "📁 Aapka folder khali hai."
+            text = "📁 **Aapka folder khali hai.**"
         bot.send_message(call.message.chat.id, text, parse_mode="Markdown")
 
     elif data == "menu_history":
         bot.answer_callback_query(call.id)
         hist = user_history.get(user_id, [])
         if hist:
-            text = "📜 **Aapki Hosting History:**\n\n" + "\n".join([f"• {h}" for h in hist])
+            text = "📜 **AAPKI HOSTING HISTORY:**\n\n" + "\n".join([f"• **{h}**" for h in hist])
         else:
-            text = "📜 Koi history nahi mili."
+            text = "📜 **Koi history nahi mili.**"
         bot.send_message(call.message.chat.id, text, parse_mode="Markdown")
 
     elif data == "menu_delete":
@@ -153,10 +163,10 @@ def handle_callbacks(call):
         if user_active:
             markup = InlineKeyboardMarkup()
             for fn in user_active:
-                markup.add(InlineKeyboardButton(f"❌ Stop & Delete {fn}", callback_data=f"del_{fn}"))
+                markup.add(InlineKeyboardButton(f"❌ STOP & DELETE {fn}", callback_data=f"del_{fn}"))
             bot.send_message(call.message.chat.id, "🗑️ **Jis bot ko delete/stop karna hai uspar click karein:**", reply_markup=markup, parse_mode="Markdown")
         else:
-            bot.send_message(call.message.chat.id, "❌ Delete karne ke liye koi active bot nahi hai.")
+            bot.send_message(call.message.chat.id, "❌ **Delete karne ke liye koi active bot nahi hai.**", parse_mode="Markdown")
 
     elif data.startswith("del_"):
         file_name = data.replace("del_", "")
@@ -166,26 +176,30 @@ def handle_callbacks(call):
                 running_processes[process_key].terminate()
                 del running_processes[process_key]
                 bot.answer_callback_query(call.id, f"✅ {file_name} ko delete aur stop kar diya gaya hai!", show_alert=True)
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"🛑 **{file_name}** successfully stop aur delete ho gaya hai.")
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"🛑 **{file_name}** successfully stop aur delete ho gaya hai.", parse_mode="Markdown")
             except Exception as e:
                 bot.answer_callback_query(call.id, f"Error: {e}", show_alert=True)
         else:
-                bot.answer_callback_query(call.id, "❌ File nahi mili ya pehle se band hai.", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ File nahi mili ya pehle se band hai.", show_alert=True)
 
 # Document / File Upload Handler
 @bot.message_handler(content_types=['document'])
 def handle_document(message):
     user_id = message.from_user.id
     if not is_user_joined(user_id):
-        bot.reply_to(message, "PLEASE CHANNEL JOIN 🤨 START BOT❤️‍🩹", reply_markup=get_join_keyboard())
+        ask_join_text = (
+            "🚨 **WELCOME ❤️ HOSTING BOT 24/7 ⏳ ACTIVE ✅**\n\n"
+            "⚠️ **PLEASE CHANNEL JOIN 🤨 START BOT ❤️‍🩹**"
+        )
+        bot.reply_to(message, ask_join_text, reply_markup=get_join_keyboard(), parse_mode="Markdown")
         return
 
     file_name = message.document.file_name
     if not file_name.endswith('.py'):
-        bot.reply_to(message, "❌ Sirf `.py` (Python) files allowed hain!")
+        bot.reply_to(message, "❌ **Sirf `.py` (Python) files allowed hain!**", parse_mode="Markdown")
         return
 
-    msg = bot.reply_to(message, f"⚡ **{file_name}** downloading & hosting automatically...")
+    msg = bot.reply_to(message, f"⚡ **`{file_name}` downloading & hosting automatically...**", parse_mode="Markdown")
 
     try:
         file_info = bot.get_file(message.document.file_id)
@@ -208,15 +222,17 @@ def handle_document(message):
         process = subprocess.Popen(["python3", file_path])
         running_processes[process_key] = process
 
-        # History track karein
         if user_id not in user_history:
             user_history[user_id] = []
         user_history[user_id].append(f"Hosted: {file_name} at {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
+        success_text = (
+            "✅ **FILE SUCCESSFULLY LIVE HO GAYI!** 🎉\n\n"
+            f"📁 **File Name:** `{file_name}`\n"
+            "🚀 **Status:** Active & Running 24/7"
+        )
         bot.edit_message_text(
-            f"✅ **File Successfully Live Ho Gayi!**\n\n"
-            f"📁 **File:** `{file_name}`\n"
-            f"🚀 **Status:** Active & Running 24/7",
+            success_text,
             chat_id=message.chat.id,
             message_id=msg.message_id,
             reply_markup=get_main_menu(),
@@ -224,7 +240,8 @@ def handle_document(message):
         )
 
     except Exception as e:
-        bot.edit_message_text(f"⚠️ Hosting Error: {str(e)}", chat_id=message.chat.id, message_id=msg.message_id)
+        bot.edit_message_text(f"⚠️ **Hosting Error:** `{str(e)}`", chat_id=message.chat.id, message_id=msg.message_id, parse_mode="Markdown")
 
-print("🤖 Bot Advanced Menu Ke Saath Live Ho Gaya Hai...")
+print("🤖 Bot Naye Token Aur Bold Font Ke Saath Live Ho Gaya Hai...")
 bot.infinity_polling()
+                
